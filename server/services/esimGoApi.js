@@ -198,9 +198,21 @@ class EsimGoAPI {
       const loadNextPage = async (pageNum) => {
         if (pageNum > pageCount) {
           // Все страницы загружены
-          this.allPackagesCache = allBundles.map(mapBundle);
+          const allMapped = allBundles.map(mapBundle);
+          
+          // Убираем дубликаты (одинаковый name + data + validity, оставляем самый дешёвый)
+          const uniqueMap = new Map();
+          for (const pkg of allMapped) {
+            const key = `${pkg.name}_${pkg.data}_${pkg.validity}`;
+            const existing = uniqueMap.get(key);
+            if (!existing || pkg.price < existing.price) {
+              uniqueMap.set(key, pkg);
+            }
+          }
+          
+          this.allPackagesCache = Array.from(uniqueMap.values());
           this.cacheTimestamp = Date.now();
-          console.log('[eSIM-GO] Full cache completed:', this.allPackagesCache.length, 'packages');
+          console.log('[eSIM-GO] Full cache completed:', allMapped.length, '→', this.allPackagesCache.length, 'unique packages');
           
           // Формируем региональные категории из ПОЛНОГО кэша
           const regionalCategories = this.getRegionalCategories(this.allPackagesCache);
