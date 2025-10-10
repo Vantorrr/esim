@@ -87,43 +87,58 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
   const isRegional = Array.isArray(pkg.coverage) && pkg.coverage.length > 3;
 
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-xl transition-all animate-fade-in border-2 border-primary/10 hover:border-primary/30">
-      {/* Region/Country Name Header */}
-      <div className="flex items-center gap-2 mb-3">
-        <div className="text-3xl">{getRegionIcon()}</div>
-        <div className="flex-1">
-          <h3 className="text-lg font-bold text-text-primary">
-            {getRegionName()}
-          </h3>
-          {isRegional && pkg.coverage && (
-            <p className="text-xs text-text-secondary">
-              Покрытие: {pkg.coverage.length} {pkg.coverage.length > 100 ? 'стран' : pkg.coverage.slice(0, 3).join(', ')}
-              {pkg.coverage.length > 3 && ` +${pkg.coverage.length - 3}`}
-            </p>
-          )}
+    <div className="bg-white rounded-2xl p-5 shadow-md hover:shadow-xl transition-all animate-fade-in border border-gray-100 hover:border-primary/40">
+      {/* Region/Country Name + Icon */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-14 h-14 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-2xl flex items-center justify-center text-3xl shadow-sm">
+            {getRegionIcon()}
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-text-primary mb-0.5">
+              {getRegionName()}
+            </h3>
+            {isRegional && pkg.coverage && pkg.coverage.length > 0 && (
+              <p className="text-xs text-text-secondary font-medium">
+                {pkg.coverage.length} {pkg.coverage.length === 1 ? 'страна' : pkg.coverage.length < 5 ? 'страны' : 'стран'}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Data, Days, Price, Button */}
+      {/* Data + Days + Price + Button */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="px-3 py-1.5 bg-primary/10 text-primary rounded-xl font-semibold text-sm flex items-center gap-1">
-            <DataIcon className="w-4 h-4" />
-            {pkg.data}
-          </span>
-          <span className="px-3 py-1.5 bg-secondary/10 text-secondary rounded-xl font-semibold text-sm flex items-center gap-1">
-            <ClockIcon className="w-4 h-4" />
-            {pkg.validity} {pkg.validity === 1 ? 'день' : 'дней'}
-          </span>
+        {/* Left: Data + Days */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <div className="px-3 py-2 bg-gradient-to-r from-primary/15 to-primary/5 rounded-xl">
+              <div className="flex items-center gap-1.5">
+                <DataIcon className="w-4 h-4 text-primary" />
+                <span className="font-bold text-primary text-base">{pkg.data}</span>
+              </div>
+            </div>
+            <div className="px-3 py-2 bg-gradient-to-r from-secondary/15 to-secondary/5 rounded-xl">
+              <div className="flex items-center gap-1.5">
+                <ClockIcon className="w-4 h-4 text-secondary" />
+                <span className="font-bold text-secondary text-base">
+                  {pkg.validity} {pkg.validity === 1 ? 'д' : 'д'}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
         
-        <div className="flex items-center gap-3">
-          <div className="text-2xl font-bold text-text-primary">
-            {priceInRub}₽
+        {/* Right: Price + Button */}
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <div className="text-3xl font-black text-text-primary">
+              {priceInRub}<span className="text-2xl">₽</span>
+            </div>
           </div>
           <button
             onClick={handleBuy}
-            className="px-6 py-3 bg-gradient-primary text-white rounded-xl font-bold hover:opacity-90 transition-all shadow-lg hover:shadow-xl active:scale-95"
+            className="px-7 py-3.5 bg-gradient-primary text-white rounded-2xl font-bold text-base hover:opacity-90 transition-all shadow-lg hover:shadow-xl active:scale-95 whitespace-nowrap"
           >
             Купить
           </button>
