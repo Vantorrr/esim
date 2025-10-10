@@ -7,6 +7,18 @@ const webhookRoutes = require('./routes/webhook');
 const tinkoffRoutes = require('./routes/tinkoff');
 const esimGoWebhookRoutes = require('./routes/esimGoWebhook');
 
+// Запускаем Telegram бота
+if (process.env.TELEGRAM_BOT_TOKEN) {
+  try {
+    require('./bot');
+    console.log('🤖 Telegram бот запущен!');
+  } catch (error) {
+    console.error('❌ Ошибка запуска бота:', error.message);
+  }
+} else {
+  console.log('⚠️  TELEGRAM_BOT_TOKEN не найден, бот не запущен');
+}
+
 const app = express();
 const PORT = process.env.PORT || 8080;
 
