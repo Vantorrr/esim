@@ -60,7 +60,13 @@ export default function PackageList({ country }: PackageListProps) {
   if (error) {
     return (
       <div className="bg-white rounded-2xl p-8 text-center">
-        <div className="text-6xl mb-4">😕</div>
+        <div className="w-20 h-20 mx-auto mb-4 bg-red-50 rounded-full flex items-center justify-center">
+          <svg className="w-10 h-10 text-red-500" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+            <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+        </div>
         <h3 className="text-xl font-bold text-text-primary mb-2">Ошибка загрузки</h3>
         <p className="text-text-secondary mb-4">{error}</p>
         <button
@@ -76,7 +82,12 @@ export default function PackageList({ country }: PackageListProps) {
   if (packages.length === 0) {
     return (
       <div className="bg-white rounded-2xl p-8 text-center">
-        <div className="text-6xl mb-4">📱</div>
+        <div className="w-20 h-20 mx-auto mb-4 bg-background rounded-full flex items-center justify-center">
+          <svg className="w-10 h-10 text-text-secondary" viewBox="0 0 24 24" fill="none">
+            <rect x="7" y="2" width="10" height="20" rx="2" stroke="currentColor" strokeWidth="2"/>
+            <rect x="7" y="9" width="10" height="6" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+          </svg>
+        </div>
         <h3 className="text-xl font-bold text-text-primary mb-2">
           {country ? 'Пакеты не найдены' : 'Выберите страну'}
         </h3>
