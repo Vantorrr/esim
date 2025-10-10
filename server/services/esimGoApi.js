@@ -2,9 +2,14 @@ const axios = require('axios');
 
 class EsimGoAPI {
   constructor() {
-    // Позволяем конфигурировать базовый URL и версию из .env
-    // По умолчанию используем корневой URL, т.к. у провайдера могли измениться версии
-    this.baseURL = process.env.ESIM_GO_API_URL || 'https://api.esim-go.com';
+    // Нормализуем базовый URL до origin (без /vX/...). Даже если в .env указана версия — отрежем её
+    const raw = process.env.ESIM_GO_API_URL || 'https://api.esim-go.com';
+    try {
+      const u = new URL(raw);
+      this.baseURL = `${u.protocol}//${u.host}`; // только origin
+    } catch (e) {
+      this.baseURL = 'https://api.esim-go.com';
+    }
     this.apiKey = process.env.ESIM_GO_API_KEY;
     this.marginMultiplier = 2; // 100% margin
   }
