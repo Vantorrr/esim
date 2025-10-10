@@ -343,8 +343,20 @@ class EsimGoAPI {
     const regionPackages = this.allPackagesCache.filter(p => p && p.name && pattern.test(p.name));
     console.log('[eSIM-GO] Found', regionPackages.length, 'packages matching pattern for', regionSlug);
     
+    // Убираем дубликаты (одинаковый data + validity, но разные группы) — оставляем самый дешёвый
+    const uniqueMap = new Map();
+    for (const pkg of regionPackages) {
+      const key = `${pkg.data}_${pkg.validity}`;
+      const existing = uniqueMap.get(key);
+      if (!existing || pkg.price < existing.price) {
+        uniqueMap.set(key, pkg);
+      }
+    }
+    const uniquePackages = Array.from(uniqueMap.values());
+    console.log('[eSIM-GO] After deduplication:', uniquePackages.length, 'unique packages');
+    
     // Сортируем по приоритету (GB и дни)
-    const sorted = this.smartFilter(regionPackages, 50);
+    const sorted = this.smartFilter(uniquePackages, 50);
     console.log('[eSIM-GO] After smart filter:', sorted.length, 'packages');
     
     return { esims: sorted };
