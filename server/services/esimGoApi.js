@@ -173,10 +173,10 @@ class EsimGoAPI {
         };
       };
       
-      // Ставим первую страницу как временный топ (чтобы что-то показать сразу)
+      // Первая страница как начальный кэш
       const firstPageMapped = (firstPage.bundles || []).map(mapBundle);
-      this.topPackagesCache = firstPageMapped.slice(0, 10);
       this.allPackagesCache = firstPageMapped;
+      this.topPackagesCache = firstPageMapped.slice(0, 10);
       console.log('[eSIM-GO] Initial cache ready:', this.topPackagesCache.length, 'packages');
       
       // Загружаем остальные страницы МЕДЛЕННО в фоне (по 1 странице каждые 500ms)
