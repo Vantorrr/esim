@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react';
 import { getCountries } from '@/lib/api';
 import { hapticFeedback } from '@/lib/telegram';
+import { getCountryNameRu } from '@/lib/countryNames';
 
 interface Country {
   code: string;
   name: string;
+  nameRu?: string;
   flag?: string;
 }
 
@@ -28,7 +30,12 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
   const loadCountries = async () => {
     try {
       const data = await getCountries();
-      setCountries(data.countries || []);
+      // Добавляем русские названия к каждой стране
+      const countriesWithRu = (data.countries || []).map(c => ({
+        ...c,
+        nameRu: getCountryNameRu(c.code),
+      }));
+      setCountries(countriesWithRu);
     } catch (error) {
       console.error('Failed to load countries:', error);
     } finally {
@@ -36,9 +43,14 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
     }
   };
 
-  const filteredCountries = countries.filter(country =>
-    country.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredCountries = countries.filter(country => {
+    const searchLower = search.toLowerCase();
+    return (
+      country.name.toLowerCase().includes(searchLower) ||
+      country.code.toLowerCase().includes(searchLower) ||
+      (country.nameRu && country.nameRu.toLowerCase().includes(searchLower))
+    );
+  });
 
   const handleSelect = (countryCode: string) => {
     hapticFeedback('light');
@@ -107,7 +119,7 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
                 >
                   <div className="text-3xl mb-2">{country.flag || '🏳️'}</div>
                   <div className="text-xs text-text-primary font-semibold">
-                    {country.name}
+                    {country.nameRu || country.name}
                   </div>
                 </button>
               );
@@ -174,7 +186,7 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
                     }`}
                   >
                     <span className="text-2xl">{country.flag || '🏳️'}</span>
-                    <span className="font-medium">{country.name}</span>
+                    <span className="font-medium">{country.nameRu || country.name}</span>
                     {selectedCountry === country.code && (
                       <span className="ml-auto text-secondary">✓</span>
                     )}
