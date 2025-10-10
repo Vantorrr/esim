@@ -172,7 +172,18 @@ class EsimGoAPI {
     };
 
     try {
-      return await this.tryEndpoints(withCountry, 'GET', null, mapper);
+      const result = await this.tryEndpoints(withCountry, 'GET', null, mapper);
+      // API v2.5 не фильтрует по country параметру, делаем фильтрацию на сервере
+      if (countryCode && result.esims) {
+        console.log('[eSIM-GO] filtering', result.esims.length, 'packages by country:', countryCode);
+        const filtered = result.esims.filter(p => 
+          p.country === countryCode || 
+          (Array.isArray(p.coverage) && p.coverage.includes(countryCode))
+        );
+        console.log('[eSIM-GO] filtered down to', filtered.length, 'packages');
+        return { esims: filtered };
+      }
+      return result;
     } catch (e) {
       console.warn('[eSIM-GO] packages fallback → mock');
       const all = [
