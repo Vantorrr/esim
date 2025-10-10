@@ -14,6 +14,7 @@ interface Package {
   price: number;
   originalPrice: number;
   country: string;
+  countryName?: string;
   coverage: string[];
   priceRub?: number;
   currencyRate?: number;
