@@ -48,22 +48,32 @@ export default function Footer() {
                   href="https://t.me/support" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-text-secondary hover:text-primary transition-colors"
+                  className="text-text-secondary hover:text-primary transition-colors flex items-center gap-2"
                 >
-                  💬 Telegram Support
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="2"/>
+                  </svg>
+                  Telegram Support
                 </a>
               </li>
               <li>
                 <a 
                   href="mailto:support@ewave.com"
-                  className="text-text-secondary hover:text-primary transition-colors"
+                  className="text-text-secondary hover:text-primary transition-colors flex items-center gap-2"
                 >
-                  ✉️ Email Support
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" strokeWidth="2"/>
+                    <polyline points="22,6 12,13 2,6" stroke="currentColor" strokeWidth="2"/>
+                  </svg>
+                  Email Support
                 </a>
               </li>
               <li>
-                <Link href="/my-orders" className="text-text-secondary hover:text-primary transition-colors">
-                  📦 Мои заказы
+                <Link href="/my-orders" className="text-text-secondary hover:text-primary transition-colors flex items-center gap-2">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke="currentColor" strokeWidth="2"/>
+                  </svg>
+                  Мои заказы
                 </Link>
               </li>
             </ul>
