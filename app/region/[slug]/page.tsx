@@ -52,8 +52,18 @@ export default function RegionPage() {
       
       setRegionName(regionNameFromSlug);
       
-      // Запрашиваем пакеты региона
-      const data = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/esim/packages?region=${slug}`).then(r => r.json());
+      // Запрашиваем пакеты региона (относительный URL)
+      const url = `/api/esim/packages?region=${slug}`;
+      console.log('[Region Page] Fetching:', url);
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        console.error('[Region Page] API error:', response.status);
+        throw new Error(`API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('[Region Page] Received:', data.esims?.length || 0, 'packages');
       setPackages(data.esims || []);
     } catch (error) {
       console.error('Failed to load region packages:', error);
