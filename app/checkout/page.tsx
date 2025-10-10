@@ -285,7 +285,7 @@ function CheckoutContent() {
                 Обработка...
               </span>
             ) : (
-              `Оплатить $${pkg.price}`
+              `Оплатить ${pkg.priceRub || Math.round(pkg.price * 95)}₽`
             )}
           </button>
         </div>
