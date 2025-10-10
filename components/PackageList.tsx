@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { getPackages } from '@/lib/api';
 import PackageCard from './PackageCard';
+import { filterAndSortTariffs, getDefaultTariffs } from '@/lib/tariffFilter';
 
 interface Package {
   id: string;
@@ -13,6 +14,7 @@ interface Package {
   originalPrice: number;
   country: string;
   coverage: string[];
+  priceRub?: number;
 }
 
 interface PackageListProps {
@@ -34,7 +36,16 @@ export default function PackageList({ country }: PackageListProps) {
     
     try {
       const data = await getPackages(country || undefined);
-      setPackages(data.esims || []);
+      const allPackages = data.esims || [];
+      
+      // Умная фильтрация: 
+      // - Если страна выбрана → фильтруем до 10 лучших тарифов
+      // - Если страна не выбрана → показываем топ-10 тарифов Таиланда (популярное направление)
+      const filtered = country 
+        ? filterAndSortTariffs(allPackages, 10)
+        : getDefaultTariffs(allPackages, 'TH', 10);
+      
+      setPackages(filtered);
     } catch (err: any) {
       setError(err.message || 'Failed to load packages');
       console.error('Failed to load packages:', err);
@@ -113,7 +124,7 @@ export default function PackageList({ country }: PackageListProps) {
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-text-primary">
-            Доступные тарифы
+            {country ? 'Доступные тарифы' : '🔥 Популярные направления'}
           </h2>
         </div>
         <span className="text-sm text-text-secondary">

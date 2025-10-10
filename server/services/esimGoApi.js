@@ -31,6 +31,47 @@ class EsimGoAPI {
     this.refreshCache();
   }
 
+  // Умная фильтрация по приоритету: 1GB/7д → 2GB/15д → 5GB/30д → 10GB/30д → 50GB/30д → безлимит
+  smartFilter(packages, limit = 10) {
+    const priorities = [
+      { data: 1000, validity: 7, priority: 1 },      // 1GB / 7 дней
+      { data: 2000, validity: 15, priority: 2 },     // 2GB / 15 дней
+      { data: 5000, validity: 30, priority: 3 },     // 5GB / 30 дней
+      { data: 10000, validity: 30, priority: 4 },    // 10GB / 30 дней
+      { data: 50000, validity: 30, priority: 5 },    // 50GB / 30 дней
+      // Безлимит (unlimited) — определяем по ключевому слову в description
+      { unlimited: true, validity: 1, priority: 6 },
+      { unlimited: true, validity: 3, priority: 7 },
+      { unlimited: true, validity: 5, priority: 8 },
+      { unlimited: true, validity: 7, priority: 9 },
+      { unlimited: true, validity: 15, priority: 10 },
+      { unlimited: true, validity: 30, priority: 11 },
+    ];
+
+    const getPriority = (pkg) => {
+      const isUnlimited = /unlimited|безлимит/i.test(pkg.name || '');
+      const dataInMB = parseInt(pkg.data) || 0;
+
+      for (const p of priorities) {
+        if (p.unlimited && isUnlimited && pkg.validity === p.validity) {
+          return p.priority;
+        }
+        if (!p.unlimited && dataInMB === p.data && pkg.validity === p.validity) {
+          return p.priority;
+        }
+      }
+      return 999; // Низкий приоритет для остальных
+    };
+
+    return packages
+      .map(pkg => ({ ...pkg, _priority: getPriority(pkg) }))
+      .sort((a, b) => {
+        if (a._priority !== b._priority) return a._priority - b._priority;
+        return a.price - b.price; // При равном приоритете — по цене
+      })
+      .slice(0, limit);
+  }
+
   async refreshCache() {
     try {
       console.log('[eSIM-GO] Loading first page for top packages...');
@@ -57,11 +98,10 @@ class EsimGoAPI {
       
       const firstPageMapped = (firstPage.bundles || []).map(mapBundle);
       
-      // Топ-10: сортируем по цене и берём первые 10
-      this.topPackagesCache = firstPageMapped
-        .sort((a, b) => a.price - b.price)
-        .slice(0, 10);
-      console.log('[eSIM-GO] Top 10 packages ready');
+      // Топ-10 для Таиланда (популярное направление): умная фильтрация
+      const thaiPackages = firstPageMapped.filter(p => p.country === 'TH');
+      this.topPackagesCache = this.smartFilter(thaiPackages, 10);
+      console.log('[eSIM-GO] Top 10 packages ready for Thailand');
       
       // Загружаем остальные страницы в фоне
       let allBundles = firstPage.bundles || [];
@@ -210,15 +250,19 @@ class EsimGoAPI {
       console.warn('[eSIM-GO] Top packages not ready yet, falling back');
     }
     
-    // Если страна указана — используем полный кэш
+    // Если страна указана — используем полный кэш + умную фильтрацию
     if (countryCode && this.allPackagesCache) {
       console.log('[eSIM-GO] Using full cache:', this.allPackagesCache.length, 'packages');
       const packages = this.allPackagesCache.filter(p => 
         p.country === countryCode || 
         (Array.isArray(p.coverage) && p.coverage.includes(countryCode))
       );
-      console.log('[eSIM-GO] filtered down to', packages.length, 'packages for', countryCode);
-      return { esims: packages };
+      console.log('[eSIM-GO] filtered to', packages.length, 'packages for', countryCode);
+      
+      // Применяем умную фильтрацию: топ-10 по приоритету
+      const smartFiltered = this.smartFilter(packages, 10);
+      console.log('[eSIM-GO] smart filtered to', smartFiltered.length, 'packages');
+      return { esims: smartFiltered };
     }
     
     // Если полный кэш ещё не готов, но есть топ-10 — возвращаем топ-10 с фильтрацией
