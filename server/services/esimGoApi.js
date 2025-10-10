@@ -20,11 +20,10 @@ class EsimGoAPI {
         method,
         url: `${this.baseURL}${endpoint}`,
         headers: {
-          // Согласно документации некоторые интеграции требуют Bearer
-          // Сохраняем совместимость: если явно указана ESIM_GO_USE_X_API_KEY, используем старый заголовок
-          ...(process.env.ESIM_GO_USE_X_API_KEY === 'true'
-            ? { 'X-API-Key': this.apiKey }
-            : { Authorization: `Bearer ${this.apiKey}` }),
+          // ПОД КЛЮЧ: принудительно используем X-API-Key (можно переключить флагом при необходимости)
+          ...(process.env.ESIM_GO_USE_BEARER === 'true'
+            ? { Authorization: `Bearer ${this.apiKey}` }
+            : { 'X-API-Key': this.apiKey }),
           'Content-Type': 'application/json',
           Accept: 'application/json',
         },
@@ -53,8 +52,9 @@ class EsimGoAPI {
         return mapper(res);
       } catch (err) {
         lastErr = err;
-        // продолжаем, если Not Found — пробуем следующий эндпоинт
-        if (!/not\s*found/i.test(err.message)) break; // если не 404 — выходим
+        console.warn('[eSIM-GO] endpoint failed:', ep, '-', err.message);
+        // продолжаем перебирать все кандидаты
+        continue;
       }
     }
     throw lastErr || new Error('No working endpoint found');
