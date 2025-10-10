@@ -328,15 +328,15 @@ class EsimGoAPI {
   }
 
   // Получить все варианты региона (например, все тарифы "Global - Light")
-  async getRegionPackages(regionName) {
-    console.log('[eSIM-GO] Getting packages for region:', regionName);
+  async getRegionPackages(regionSlug) {
+    console.log('[eSIM-GO] Getting packages for region slug:', regionSlug);
     
     if (!this.allPackagesCache) {
       console.warn('[eSIM-GO] Cache not ready for region search');
       return { esims: [] };
     }
     
-    // Находим паттерн региона
+    // Находим паттерн региона по slug
     const regionPatterns = {
       'global-light': /global.*light/i,
       'global-standard': /global.*standard/i,
@@ -344,24 +344,25 @@ class EsimGoAPI {
       'europe-usa': /europe.*usa|usa.*europe/i,
       'south-east-europe': /south.*east.*europe/i,
       'middle-east': /middle.*east/i,
-      'europe-usa-business': /europe.*usa.*business|business.*hub/i,
-      'americas': /americas.*us.*ca|americas/i,
-      'africa': /^africa/i,
-      'asia': /^asia/i,
+      'europe-usa-business-hubs': /europe.*usa.*business|business.*hub/i,
+      'americas-us-ca': /americas/i,
+      'africa': /africa/i,
+      'asia': /asia/i,
     };
     
-    const pattern = regionPatterns[regionName];
+    const pattern = regionPatterns[regionSlug];
     if (!pattern) {
-      console.warn('[eSIM-GO] Unknown region:', regionName);
+      console.warn('[eSIM-GO] Unknown region slug:', regionSlug, '| Available:', Object.keys(regionPatterns).join(', '));
       return { esims: [] };
     }
     
     // Фильтруем все пакеты этого региона
     const regionPackages = this.allPackagesCache.filter(p => pattern.test(p.name || ''));
+    console.log('[eSIM-GO] Found', regionPackages.length, 'raw packages matching pattern');
     
     // Сортируем по приоритету (GB и дни)
     const sorted = this.smartFilter(regionPackages, 50);
-    console.log('[eSIM-GO] Found', sorted.length, 'packages for region', regionName);
+    console.log('[eSIM-GO] After smart filter:', sorted.length, 'packages for region', regionSlug);
     
     return { esims: sorted };
   }
