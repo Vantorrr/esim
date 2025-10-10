@@ -48,6 +48,12 @@ router.get('/packages/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const packageDetails = await esimGoApi.getPackageDetails(id);
+    
+    // Добавляем цену в рублях
+    const rate = currencyService.getRate();
+    packageDetails.priceRub = currencyService.convertToRub(packageDetails.price);
+    packageDetails.currencyRate = rate;
+    
     res.json(packageDetails);
   } catch (error) {
     res.status(500).json({ error: error.message });

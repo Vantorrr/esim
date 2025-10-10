@@ -150,13 +150,10 @@ function CheckoutContent() {
             <div className="border-t border-gray-200 pt-3 mt-3">
               <div className="flex justify-between items-center text-lg">
                 <span className="font-bold text-text-primary">Итого:</span>
-                <span className="font-bold text-primary">${pkg.price}</span>
+                <span className="font-bold text-primary text-2xl">
+                  {pkg.priceRub || Math.round(pkg.price * 95)}₽
+                </span>
               </div>
-              {pkg.originalPrice && pkg.originalPrice !== pkg.price && (
-                <div className="text-right text-sm text-text-secondary line-through">
-                  ${pkg.originalPrice}
-                </div>
-              )}
             </div>
           </div>
         </div>
