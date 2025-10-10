@@ -15,6 +15,8 @@ interface Package {
   originalPrice: number;
   country: string;
   coverage: string[];
+  priceRub?: number;
+  currencyRate?: number;
 }
 
 interface PackageCardProps {
@@ -35,8 +37,8 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
     setIsExpanded(!isExpanded);
   };
 
-  // Конвертируем USD в RUB (курс ~95₽)
-  const priceInRub = Math.round(pkg.price * 95);
+  // Используем цену в рублях из API (уже рассчитана по курсу ЦБ РФ)
+  const priceInRub = pkg.priceRub || Math.round(pkg.price * 95);
 
   // Получаем флаг страны из ISO кода
   const getCountryFlag = (code: string) => {

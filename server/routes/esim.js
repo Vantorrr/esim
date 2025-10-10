@@ -1,6 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const esimGoApi = require('../services/esimGoApi');
+const currencyService = require('../services/currencyService');
+
+// Получить текущий курс USD/RUB
+router.get('/currency', (req, res) => {
+  res.json({
+    rate: currencyService.getRate(),
+    lastUpdate: currencyService.getLastUpdate(),
+  });
+});
 
 // Получить список стран
 router.get('/countries', async (req, res) => {
@@ -17,6 +26,17 @@ router.get('/packages', async (req, res) => {
   try {
     const { country } = req.query;
     const packages = await esimGoApi.getPackages(country);
+    
+    // Добавляем цены в рублях к каждому пакету
+    const rate = currencyService.getRate();
+    if (packages.esims) {
+      packages.esims = packages.esims.map(pkg => ({
+        ...pkg,
+        priceRub: currencyService.convertToRub(pkg.price),
+        currencyRate: rate,
+      }));
+    }
+    
     res.json(packages);
   } catch (error) {
     res.status(500).json({ error: error.message });
