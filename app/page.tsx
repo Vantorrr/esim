@@ -60,25 +60,25 @@ export default function Home() {
           </p>
           
           <div className="grid grid-cols-3 gap-3 max-w-2xl mx-auto">
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
-              <div className="w-10 h-10 mx-auto mb-2 text-white">
-                <PhoneIcon className="w-10 h-10" />
+            <div className="bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-md rounded-2xl p-5 border-2 border-white shadow-2xl transform hover:scale-105 transition-all">
+              <div className="w-12 h-12 mx-auto mb-3 text-yellow-300 drop-shadow-glow">
+                <PhoneIcon className="w-12 h-12" />
               </div>
-              <p className="text-sm font-medium">Мгновенная активация</p>
+              <p className="text-sm font-bold text-white drop-shadow-md">Мгновенная активация</p>
             </div>
             
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
-              <div className="w-10 h-10 mx-auto mb-2 text-white">
-                <DollarIcon className="w-10 h-10" />
+            <div className="bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-md rounded-2xl p-5 border-2 border-white shadow-2xl transform hover:scale-105 transition-all">
+              <div className="w-12 h-12 mx-auto mb-3 text-green-300 drop-shadow-glow">
+                <DollarIcon className="w-12 h-12" />
               </div>
-              <p className="text-sm font-medium">Лучшие цены</p>
+              <p className="text-sm font-bold text-white drop-shadow-md">Лучшие цены</p>
             </div>
             
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
-              <div className="w-10 h-10 mx-auto mb-2 text-white">
-                <GlobeIcon className="w-10 h-10" />
+            <div className="bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-md rounded-2xl p-5 border-2 border-white shadow-2xl transform hover:scale-105 transition-all">
+              <div className="w-12 h-12 mx-auto mb-3 text-cyan-300 drop-shadow-glow">
+                <GlobeIcon className="w-12 h-12" />
               </div>
-              <p className="text-sm font-medium">200+ стран</p>
+              <p className="text-sm font-bold text-white drop-shadow-md">200+ стран</p>
             </div>
           </div>
         </div>

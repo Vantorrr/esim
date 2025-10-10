@@ -97,3 +97,8 @@ a {
   animation: wave 3s ease-in-out infinite;
 }
 
+/* Glow effect для ярких иконок */
+.drop-shadow-glow {
+  filter: drop-shadow(0 0 8px currentColor) drop-shadow(0 0 16px currentColor);
+}
+
