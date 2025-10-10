@@ -43,7 +43,8 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
   // Получаем флаг страны из ISO кода
   const getCountryFlag = (code: string) => {
     if (!code || code.length !== 2) return '🌐';
-    return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 - 65 + c.charCodeAt(0)));
+    const codePoints = code.toUpperCase().split('').map(c => 0x1F1E6 - 65 + c.charCodeAt(0));
+    return String.fromCodePoint(...codePoints);
   };
 
   return (
