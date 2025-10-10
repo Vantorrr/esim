@@ -12,18 +12,29 @@ export default function Footer() {
             <h4 className="font-bold text-text-primary mb-3">Информация</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/faq" className="text-text-secondary hover:text-primary transition-colors">
-                  ❓ FAQ
+                <Link href="/faq" className="text-text-secondary hover:text-primary transition-colors flex items-center gap-2">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                  FAQ
                 </Link>
               </li>
               <li>
-                <Link href="/how-to-install" className="text-text-secondary hover:text-primary transition-colors">
-                  📱 Как установить eSIM
+                <Link href="/how-to-install" className="text-text-secondary hover:text-primary transition-colors flex items-center gap-2">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                    <rect x="7" y="2" width="10" height="20" rx="2" stroke="currentColor" strokeWidth="2"/>
+                  </svg>
+                  Как установить eSIM
                 </Link>
               </li>
               <li>
-                <Link href="/compatibility" className="text-text-secondary hover:text-primary transition-colors">
-                  📋 Совместимость
+                <Link href="/compatibility" className="text-text-secondary hover:text-primary transition-colors flex items-center gap-2">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 11l3 3L22 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                  Совместимость
                 </Link>
               </li>
             </ul>
@@ -62,16 +73,30 @@ export default function Footer() {
         {/* Features */}
         <div className="grid grid-cols-3 gap-4 mb-6 p-4 bg-background rounded-2xl">
           <div className="text-center">
-            <div className="text-2xl mb-1">⚡</div>
-            <div className="text-xs text-text-secondary">Мгновенная активация</div>
+            <div className="w-10 h-10 mx-auto mb-2 text-primary">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <div className="text-xs text-text-secondary font-medium">Мгновенная активация</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl mb-1">🔒</div>
-            <div className="text-xs text-text-secondary">Безопасная оплата</div>
+            <div className="w-10 h-10 mx-auto mb-2 text-primary">
+              <svg viewBox="0 0 24 24" fill="none">
+                <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" strokeWidth="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" strokeWidth="2"/>
+              </svg>
+            </div>
+            <div className="text-xs text-text-secondary font-medium">Безопасная оплата</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl mb-1">🌍</div>
-            <div className="text-xs text-text-secondary">200+ стран</div>
+            <div className="w-10 h-10 mx-auto mb-2 text-primary">
+              <svg viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="currentColor" strokeWidth="2"/>
+              </svg>
+            </div>
+            <div className="text-xs text-text-secondary font-medium">200+ стран</div>
           </div>
         </div>
 
