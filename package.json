@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "echo 'Backend only - no build needed'",
     "start": "node server/index.js",
     "start:next": "next start",
+    "build:next": "next build",
     "server": "node server/index.js",
     "server:dev": "nodemon server/index.js"
   },

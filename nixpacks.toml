@@ -1,0 +1,11 @@
+# Nixpacks config for Railway - Backend only
+
+[phases.setup]
+nixPkgs = ["nodejs-18_x"]
+
+[phases.install]
+cmds = ["npm ci --omit=dev"]
+
+[start]
+cmd = "node server/index.js"
+

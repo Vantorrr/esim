@@ -1,7 +1,8 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "NIXPACKS"
+    "builder": "NIXPACKS",
+    "buildCommand": "echo 'Backend only - skipping Next.js build'"
   },
   "deploy": {
     "startCommand": "node server/index.js",
