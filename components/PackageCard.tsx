@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { hapticFeedback } from '@/lib/telegram';
+import DataIcon from './icons/DataIcon';
+import ClockIcon from './icons/ClockIcon';
 
 interface Package {
   id: string;
@@ -44,11 +46,13 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
               {pkg.name}
             </h3>
             <div className="flex flex-wrap gap-2 text-sm">
-              <span className="px-3 py-1 bg-primary/10 text-primary rounded-full font-medium">
-                📊 {pkg.data}
+              <span className="px-3 py-1.5 bg-primary/10 text-primary rounded-xl font-medium flex items-center gap-1.5">
+                <DataIcon className="w-4 h-4" />
+                {pkg.data}
               </span>
-              <span className="px-3 py-1 bg-secondary/10 text-secondary rounded-full font-medium">
-                ⏱️ {pkg.validity} дней
+              <span className="px-3 py-1.5 bg-secondary/10 text-secondary rounded-xl font-medium flex items-center gap-1.5">
+                <ClockIcon className="w-4 h-4" />
+                {pkg.validity} дней
               </span>
             </div>
           </div>

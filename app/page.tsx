@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { initTelegramSDK } from '@/lib/telegram';
 import Header from '@/components/Header';
 import CountrySelector from '@/components/CountrySelector';
@@ -8,6 +9,9 @@ import PackageList from '@/components/PackageList';
 import Footer from '@/components/Footer';
 import LoadingScreen from '@/components/LoadingScreen';
 import BottomNav from '@/components/BottomNav';
+import PhoneIcon from '@/components/icons/PhoneIcon';
+import DollarIcon from '@/components/icons/DollarIcon';
+import GlobeIcon from '@/components/icons/GlobeIcon';
 
 export default function Home() {
   const [isReady, setIsReady] = useState(false);
@@ -35,22 +39,46 @@ export default function Home() {
       <section className="bg-gradient-primary text-white py-12 px-4 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-wave opacity-30 rounded-full blur-3xl animate-wave"></div>
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="text-6xl mb-4 animate-wave">✈️</div>
-          <h1 className="text-4xl font-bold mb-4">
+          <div className="mb-6 inline-block p-4 bg-white/10 backdrop-blur-md rounded-3xl">
+            <div className="w-16 h-16 relative">
+              <Image
+                src="/logo.png"
+                alt="eWave"
+                width={64}
+                height={64}
+                className="drop-shadow-lg"
+                priority
+              />
+            </div>
+          </div>
+          
+          <h1 className="text-4xl font-bold mb-3">
             eSIM для путешествий
           </h1>
-          <p className="text-xl opacity-90 mb-6">
+          <p className="text-xl opacity-90 mb-8">
             Интернет в любой точке мира за минуту
           </p>
-          <div className="flex gap-4 justify-center text-sm">
-            <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
-              📱 Мгновенная активация
+          
+          <div className="grid grid-cols-3 gap-3 max-w-2xl mx-auto">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
+              <div className="w-10 h-10 mx-auto mb-2 text-white">
+                <PhoneIcon className="w-10 h-10" />
+              </div>
+              <p className="text-sm font-medium">Мгновенная активация</p>
             </div>
-            <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
-              💰 Лучшие цены
+            
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
+              <div className="w-10 h-10 mx-auto mb-2 text-white">
+                <DollarIcon className="w-10 h-10" />
+              </div>
+              <p className="text-sm font-medium">Лучшие цены</p>
             </div>
-            <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
-              🌍 200+ стран
+            
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
+              <div className="w-10 h-10 mx-auto mb-2 text-white">
+                <GlobeIcon className="w-10 h-10" />
+              </div>
+              <p className="text-sm font-medium">200+ стран</p>
             </div>
           </div>
         </div>
