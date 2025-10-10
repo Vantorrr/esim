@@ -145,10 +145,10 @@ class EsimGoAPI {
         // Конвертируем MB в GB для удобства отображения
         let dataDisplay = '';
         
-        // Проверяем unlimited
-        if (p.unlimited === true || p.dataAmount === -1) {
+        // Проверяем unlimited (только если явно true)
+        if (p.unlimited === true) {
           dataDisplay = 'Unlimited';
-        } else if (p.dataAmount !== undefined && p.dataAmount !== null && p.dataAmount > 0) {
+        } else if (typeof p.dataAmount === 'number' && p.dataAmount > 0) {
           const mb = p.dataAmount;
           if (mb >= 1000) {
             const gb = mb / 1000;
@@ -157,8 +157,18 @@ class EsimGoAPI {
             dataDisplay = `${mb}MB`;
           }
         } else {
-          // Фоллбек на другие поля
-          dataDisplay = p.data || p.dataVolume || p.size || '1GB';
+          // Фоллбек: парсим из description или ставим дефолт
+          const desc = p.description || p.name || '';
+          const match = desc.match(/(\d+)\s*(GB|MB)/i);
+          if (match) {
+            const value = parseInt(match[1]);
+            const unit = match[2].toUpperCase();
+            dataDisplay = unit === 'GB' ? `${value}GB` : (value >= 1000 ? `${value/1000}GB` : `${value}MB`);
+          } else if (/unlimited/i.test(desc)) {
+            dataDisplay = 'Unlimited';
+          } else {
+            dataDisplay = '1GB';
+          }
         }
         
         return {
