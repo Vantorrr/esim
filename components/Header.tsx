@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { getTelegramUser } from '@/lib/telegram';
 
 export default function Header() {
@@ -29,12 +30,22 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white border-b border-primary/10 sticky top-0 z-50 backdrop-blur-sm bg-white/80">
+    <header className="bg-white border-b border-primary/10 sticky top-0 z-50 backdrop-blur-lg bg-white/95 shadow-sm">
       <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center text-2xl">
-            🌊
+          {/* Логотип */}
+          <div className="relative w-10 h-10 rounded-xl overflow-hidden shadow-md">
+            <Image
+              src="/logo.png"
+              alt="eWave"
+              width={40}
+              height={40}
+              className="object-cover"
+              priority
+            />
           </div>
+          
+          {/* Текст */}
           <div>
             <h1 className="text-lg font-bold text-text-primary">eWave</h1>
             {user && (
@@ -45,10 +56,11 @@ export default function Header() {
           </div>
         </div>
         
+        {/* Переключатель языка */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => setLang(lang === 'ru' ? 'en' : 'ru')}
-            className="px-3 py-1 rounded-lg bg-background text-text-primary text-sm font-medium hover:bg-primary/10 transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-background text-text-primary text-sm font-medium hover:bg-primary/10 transition-colors border border-primary/10"
           >
             {lang === 'ru' ? '🇷🇺 RU' : '🇬🇧 EN'}
           </button>
