@@ -70,9 +70,19 @@ QR-код: ${qrData.qrCodeUrl || 'См. вложение'}
 
   return (
     <div className="bg-white rounded-2xl p-6 space-y-4">
-      <h2 className="text-xl font-bold text-text-primary text-center">
-        📱 Ваш QR-код eSIM
-      </h2>
+      <div className="flex items-center justify-center gap-2 mb-2">
+        <div className="w-6 h-6 text-primary">
+          <svg viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+            <rect x="14" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+            <rect x="3" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+            <rect x="14" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+          </svg>
+        </div>
+        <h2 className="text-xl font-bold text-text-primary text-center">
+          Ваш QR-код eSIM
+        </h2>
+      </div>
 
       {/* QR Code Image */}
       <div className="bg-background rounded-2xl p-6 flex justify-center">
@@ -93,16 +103,23 @@ QR-код: ${qrData.qrCodeUrl || 'См. вложение'}
       <div className="grid grid-cols-3 gap-2">
         <button
           onClick={handleDownload}
-          className="py-3 bg-primary/10 text-primary rounded-xl font-medium hover:bg-primary/20 transition-colors text-sm"
+          className="py-3 bg-primary/10 text-primary rounded-xl font-medium hover:bg-primary/20 transition-colors text-sm flex items-center justify-center gap-1.5"
         >
-          💾 Сохранить
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          Сохранить
         </button>
         
         <button
           onClick={handleEmail}
-          className="py-3 bg-secondary/10 text-secondary rounded-xl font-medium hover:bg-secondary/20 transition-colors text-sm"
+          className="py-3 bg-secondary/10 text-secondary rounded-xl font-medium hover:bg-secondary/20 transition-colors text-sm flex items-center justify-center gap-1.5"
         >
-          ✉️ Email
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" strokeWidth="2"/>
+            <polyline points="22,6 12,13 2,6" stroke="currentColor" strokeWidth="2"/>
+          </svg>
+          Email
         </button>
         
         <button
@@ -110,9 +127,13 @@ QR-код: ${qrData.qrCodeUrl || 'См. вложение'}
             setShowDetails(!showDetails);
             hapticFeedback('light');
           }}
-          className="py-3 bg-background text-text-primary rounded-xl font-medium hover:bg-primary/10 transition-colors text-sm"
+          className="py-3 bg-background text-text-primary rounded-xl font-medium hover:bg-primary/10 transition-colors text-sm flex items-center justify-center gap-1.5"
         >
-          📋 Детали
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="2"/>
+            <polyline points="14 2 14 8 20 8" stroke="currentColor" strokeWidth="2"/>
+          </svg>
+          Детали
         </button>
       </div>
 
@@ -168,9 +189,13 @@ QR-код: ${qrData.qrCodeUrl || 'См. вложение'}
             </div>
           </div>
 
-          <p className="text-xs text-text-secondary">
-            💡 Эти данные можно ввести вручную, если не получается отсканировать QR-код
-          </p>
+          <div className="flex items-start gap-2 text-xs text-text-secondary">
+            <svg className="w-4 h-4 flex-shrink-0 text-primary mt-0.5" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+              <path d="M12 16v-4M12 8h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+            <p>Эти данные можно ввести вручную, если не получается отсканировать QR-код</p>
+          </div>
         </div>
       )}
     </div>
