@@ -118,7 +118,15 @@ function CheckoutContent() {
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
         {/* Package Info */}
         <div className="bg-white rounded-2xl p-6">
-          <h2 className="text-xl font-bold text-text-primary mb-4">📦 Детали пакета</h2>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-6 h-6 text-primary">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke="currentColor" strokeWidth="2"/>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96" stroke="currentColor" strokeWidth="2"/>
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-text-primary">Детали пакета</h2>
+          </div>
           
           <div className="space-y-3">
             <div className="flex justify-between items-center">
@@ -152,7 +160,15 @@ function CheckoutContent() {
 
         {/* Payment Method */}
         <div className="bg-white rounded-2xl p-6">
-          <h2 className="text-xl font-bold text-text-primary mb-4">💳 Способ оплаты</h2>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-6 h-6 text-primary">
+              <svg viewBox="0 0 24 24" fill="none">
+                <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2"/>
+                <line x1="2" y1="10" x2="22" y2="10" stroke="currentColor" strokeWidth="2"/>
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-text-primary">Способ оплаты</h2>
+          </div>
           
           <div className="space-y-3">
             <button
@@ -167,8 +183,11 @@ function CheckoutContent() {
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center text-2xl">
-                  💳
+                <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none">
+                    <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2"/>
+                    <line x1="2" y1="10" x2="22" y2="10" stroke="currentColor" strokeWidth="2"/>
+                  </svg>
                 </div>
                 <div className="flex-1 text-left">
                   <div className="font-medium text-text-primary">Stripe</div>
@@ -192,8 +211,10 @@ function CheckoutContent() {
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-secondary rounded-xl flex items-center justify-center text-2xl">
-                  💛
+                <div className="w-12 h-12 bg-gradient-secondary rounded-xl flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 1 0 0 7h5a3.5 3.5 0 1 1 0 7H6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
                 </div>
                 <div className="flex-1 text-left">
                   <div className="font-medium text-text-primary">Т-Банк</div>
@@ -217,8 +238,11 @@ function CheckoutContent() {
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-secondary rounded-xl flex items-center justify-center text-2xl">
-                  🇷🇺
+                <div className="w-12 h-12 bg-gradient-secondary rounded-xl flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                    <path d="M12 8v8M8 12h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
                 </div>
                 <div className="flex-1 text-left">
                   <div className="font-medium text-text-primary">ЮKassa</div>
@@ -234,7 +258,12 @@ function CheckoutContent() {
 
         {/* Security Notice */}
         <div className="bg-primary/5 rounded-2xl p-4 flex gap-3">
-          <div className="text-2xl">🔒</div>
+          <div className="w-10 h-10 flex-shrink-0 text-primary">
+            <svg viewBox="0 0 24 24" fill="none">
+              <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" strokeWidth="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" strokeWidth="2"/>
+            </svg>
+          </div>
           <div className="flex-1 text-sm text-text-secondary">
             <p className="font-medium text-text-primary mb-1">Безопасная оплата</p>
             <p>Ваши данные защищены по стандарту PCI DSS. Мы не храним данные вашей карты.</p>
