@@ -22,6 +22,75 @@ class EsimGoAPI {
       packageDetails: process.env.ESIM_GO_PACKAGE_DETAILS_PATH || '/v2.5/catalogue/:id', // ожидает :id (name бандла)
       orders: process.env.ESIM_GO_ORDERS_PATH || '/v2.5/orders',
     };
+    // Кэш всех тарифов (загружаем постепенно в фоне)
+    this.allPackagesCache = null;
+    this.topPackagesCache = null; // топ-10 для главной
+    this.cacheTimestamp = null;
+    this.cacheLifetime = 30 * 60 * 1000; // 30 минут
+    // Запускаем загрузку топ-10 сразу, остальное — в фоне
+    this.refreshCache();
+  }
+
+  async refreshCache() {
+    try {
+      console.log('[eSIM-GO] Loading first page for top packages...');
+      const firstPage = await this.request(`${this.paths.packages}?page=1`);
+      const pageCount = firstPage.pageCount || 1;
+      console.log('[eSIM-GO] Total pages:', pageCount, '| Total bundles:', firstPage.rows);
+      
+      // Маппим первую страницу для быстрого старта
+      const mapBundle = (p) => {
+        const countryIso = p.countries?.[0]?.iso || p.country || p.countryCode;
+        const countryName = p.countries?.[0]?.name || p.name;
+        return {
+          id: p.name || p.id || p.packageId || p.code,
+          name: p.description || p.title || p.name,
+          data: p.dataAmount ? `${p.dataAmount}MB` : (p.data || p.dataVolume || p.size),
+          validity: p.duration || p.validity || p.days,
+          country: countryIso,
+          countryName: countryName,
+          coverage: p.countries?.map(c => c.iso) || p.coverage || [],
+          originalPrice: p.price || p.amount || p.cost,
+          price: parseFloat(((p.price || p.amount || p.cost) * this.marginMultiplier).toFixed(2)),
+        };
+      };
+      
+      const firstPageMapped = (firstPage.bundles || []).map(mapBundle);
+      
+      // Топ-10: сортируем по цене и берём первые 10
+      this.topPackagesCache = firstPageMapped
+        .sort((a, b) => a.price - b.price)
+        .slice(0, 10);
+      console.log('[eSIM-GO] Top 10 packages ready');
+      
+      // Загружаем остальные страницы в фоне
+      let allBundles = firstPage.bundles || [];
+      const batchSize = 10;
+      
+      for (let i = 2; i <= pageCount; i += batchSize) {
+        const promises = [];
+        for (let j = i; j < i + batchSize && j <= pageCount; j++) {
+          promises.push(this.request(`${this.paths.packages}?page=${j}`));
+        }
+        const results = await Promise.all(promises);
+        for (const res of results) {
+          allBundles = allBundles.concat(res.bundles || []);
+        }
+        console.log('[eSIM-GO] Loaded pages', i, '-', Math.min(i + batchSize - 1, pageCount), '| Total:', allBundles.length);
+      }
+      
+      // Маппим все бандлы
+      this.allPackagesCache = allBundles.map(mapBundle);
+      this.cacheTimestamp = Date.now();
+      console.log('[eSIM-GO] Full cache refreshed:', this.allPackagesCache.length, 'packages');
+      
+      // Планируем следующее обновление
+      setTimeout(() => this.refreshCache(), this.cacheLifetime);
+    } catch (e) {
+      console.error('[eSIM-GO] Cache refresh failed:', e.message);
+      // Повторяем через 5 минут при ошибке
+      setTimeout(() => this.refreshCache(), 5 * 60 * 1000);
+    }
   }
 
   async request(endpoint, method = 'GET', data = null) {
@@ -128,6 +197,38 @@ class EsimGoAPI {
 
   // Получить пакеты для страны
   async getPackages(countryCode) {
+    // Если страна не указана — возвращаем топ-10
+    if (!countryCode) {
+      if (this.topPackagesCache) {
+        console.log('[eSIM-GO] Returning top 10 packages');
+        return { esims: this.topPackagesCache };
+      }
+      console.warn('[eSIM-GO] Top packages not ready yet, falling back');
+    }
+    
+    // Если страна указана — используем полный кэш
+    if (countryCode && this.allPackagesCache) {
+      console.log('[eSIM-GO] Using full cache:', this.allPackagesCache.length, 'packages');
+      const packages = this.allPackagesCache.filter(p => 
+        p.country === countryCode || 
+        (Array.isArray(p.coverage) && p.coverage.includes(countryCode))
+      );
+      console.log('[eSIM-GO] filtered down to', packages.length, 'packages for', countryCode);
+      return { esims: packages };
+    }
+    
+    // Если полный кэш ещё не готов, но есть топ-10 — возвращаем топ-10 с фильтрацией
+    if (countryCode && this.topPackagesCache) {
+      console.warn('[eSIM-GO] Full cache not ready, using top 10 with filter');
+      const packages = this.topPackagesCache.filter(p => 
+        p.country === countryCode || 
+        (Array.isArray(p.coverage) && p.coverage.includes(countryCode))
+      );
+      return { esims: packages };
+    }
+    
+    // Фоллбек: если кэш ещё не загружен, используем старую логику (первые 50)
+    console.warn('[eSIM-GO] Cache not ready, falling back to single page');
     const withCountry = countryCode ? [
       this.paths.packages && `${this.paths.packages}?country=${countryCode}`,
       `/v3/packages?country=${countryCode}`,
