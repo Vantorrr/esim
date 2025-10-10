@@ -7,6 +7,9 @@ const inter = Inter({ subsets: ['latin', 'cyrillic'] })
 export const metadata: Metadata = {
   title: 'eWave - eSIM для путешествий',
   description: 'Купить eSIM для любой страны мира',
+  icons: {
+    icon: '/logo.png',
+  },
 }
 
 export default function RootLayout({
