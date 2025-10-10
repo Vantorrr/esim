@@ -18,6 +18,10 @@ interface Package {
   coverage: string[];
   priceRub?: number;
   currencyRate?: number;
+  isRegionalCategory?: boolean;
+  regionName?: string;
+  regionIcon?: string;
+  variantsCount?: number;
 }
 
 interface PackageCardProps {
@@ -30,7 +34,14 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
 
   const handleBuy = () => {
     hapticFeedback('medium');
-    router.push(`/checkout?package=${pkg.id}`);
+    
+    // Если это региональная категория — показываем все варианты региона
+    if (pkg.isRegionalCategory && pkg.regionName) {
+      const regionSlug = pkg.regionName.toLowerCase().replace(/\s+/g, '-').replace(/\+/g, '');
+      router.push(`/region/${regionSlug}`);
+    } else {
+      router.push(`/checkout?package=${pkg.id}`);
+    }
   };
 
   const handleToggle = () => {
@@ -43,6 +54,11 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
 
   // Получаем флаг/иконку для региона или страны
   const getRegionIcon = () => {
+    // Если это региональная категория — используем её иконку
+    if (pkg.isRegionalCategory && pkg.regionIcon) {
+      return pkg.regionIcon;
+    }
+    
     const name = pkg.name?.toLowerCase() || '';
     const isRegional = Array.isArray(pkg.coverage) && pkg.coverage.length > 3;
     
@@ -64,6 +80,11 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
   };
 
   const getRegionName = () => {
+    // Если это региональная категория — используем её название
+    if (pkg.isRegionalCategory && pkg.regionName) {
+      return pkg.regionName;
+    }
+    
     const name = pkg.name?.toLowerCase() || '';
     if (/global.*light/i.test(name)) return 'Global - Light';
     if (/global.*standard/i.test(name)) return 'Global - Standard';
@@ -120,7 +141,7 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
             onClick={handleBuy}
             className="px-6 py-2 bg-gradient-primary text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all shadow-md active:scale-95 whitespace-nowrap"
           >
-            Купить
+            {pkg.isRegionalCategory ? 'Выбрать' : 'Купить'}
           </button>
         </div>
       </div>

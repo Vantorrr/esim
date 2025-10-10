@@ -21,11 +21,18 @@ router.get('/countries', async (req, res) => {
   }
 });
 
-// Получить пакеты (все или для конкретной страны)
+// Получить пакеты (все или для конкретной страны или региона)
 router.get('/packages', async (req, res) => {
   try {
-    const { country } = req.query;
-    const packages = await esimGoApi.getPackages(country);
+    const { country, region } = req.query;
+    
+    let packages;
+    if (region) {
+      // Если запрошен регион — возвращаем все варианты этого региона
+      packages = await esimGoApi.getRegionPackages(region);
+    } else {
+      packages = await esimGoApi.getPackages(country);
+    }
     
     // Добавляем цены в рублях к каждому пакету
     const rate = currencyService.getRate();

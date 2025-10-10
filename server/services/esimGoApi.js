@@ -31,6 +31,43 @@ class EsimGoAPI {
     this.refreshCache();
   }
 
+  // Получаем региональные категории (по одному представителю каждого региона)
+  getRegionalCategories(packages) {
+    const regions = [
+      { name: 'Global - Light', pattern: /global.*light/i, icon: '🌍' },
+      { name: 'Global - Standard', pattern: /global.*standard/i, icon: '🌍' },
+      { name: 'Global - Max', pattern: /global.*max/i, icon: '🌍' },
+      { name: 'Europe + USA', pattern: /europe.*usa|usa.*europe/i, icon: '🇪🇺' },
+      { name: 'South East Europe', pattern: /south.*east.*europe/i, icon: '🇪🇺' },
+      { name: 'Middle East', pattern: /middle.*east/i, icon: '🕌' },
+      { name: 'Europe + USA + Business Hubs', pattern: /europe.*usa.*business|business.*hub/i, icon: '🇪🇺' },
+      { name: 'Americas + US + CA', pattern: /americas.*us.*ca|americas/i, icon: '🌎' },
+      { name: 'Africa', pattern: /^africa/i, icon: '🌍' },
+      { name: 'Asia', pattern: /^asia/i, icon: '🌏' },
+    ];
+
+    const categories = [];
+    
+    for (const region of regions) {
+      // Находим все пакеты этого региона
+      const regionPackages = packages.filter(p => region.pattern.test(p.name || ''));
+      
+      if (regionPackages.length > 0) {
+        // Берём самый дешёвый как представителя категории
+        const representative = regionPackages.sort((a, b) => a.price - b.price)[0];
+        categories.push({
+          ...representative,
+          isRegionalCategory: true,
+          regionName: region.name,
+          regionIcon: region.icon,
+          variantsCount: regionPackages.length, // сколько вариантов в этой категории
+        });
+      }
+    }
+    
+    return categories;
+  }
+
   // Умная фильтрация по приоритету: 1GB/7д → 2GB/15д → 5GB/30д → 10GB/30д → 50GB/30д → безлимит
   smartFilter(packages, limit = 10) {
     const priorities = [
@@ -110,14 +147,10 @@ class EsimGoAPI {
       
       const firstPageMapped = (firstPage.bundles || []).map(mapBundle);
       
-      // Топ региональных пакетов для главной (мультистрановые долгосрочные)
-      const regionalPackages = firstPageMapped.filter(p => 
-        // Региональный = много стран в покрытии ИЛИ ключевые слова в названии
-        (Array.isArray(p.coverage) && p.coverage.length > 3) ||
-        /global|europe|asia|america|africa|middle\s*east/i.test(p.name || '')
-      );
-      this.topPackagesCache = this.smartFilter(regionalPackages, 15);
-      console.log('[eSIM-GO] Top regional packages ready:', this.topPackagesCache.length);
+      // Топ региональных пакетов для главной: выбираем ОДНОГО представителя каждого региона
+      const regionalCategories = this.getRegionalCategories(firstPageMapped);
+      this.topPackagesCache = regionalCategories;
+      console.log('[eSIM-GO] Regional categories ready:', this.topPackagesCache.length);
       
       // Загружаем остальные страницы в фоне
       let allBundles = firstPage.bundles || [];
@@ -140,13 +173,10 @@ class EsimGoAPI {
       this.cacheTimestamp = Date.now();
       console.log('[eSIM-GO] Full cache refreshed:', this.allPackagesCache.length, 'packages');
       
-      // Обновляем топ региональных пакетов из полного кэша
-      const allRegionalPackages = this.allPackagesCache.filter(p => 
-        (Array.isArray(p.coverage) && p.coverage.length > 3) ||
-        /global|europe|asia|america|africa|middle\s*east/i.test(p.name || '')
-      );
-      this.topPackagesCache = this.smartFilter(allRegionalPackages, 15);
-      console.log('[eSIM-GO] Updated top regional packages:', this.topPackagesCache.length);
+      // Обновляем региональные категории из полного кэша
+      const regionalCategories = this.getRegionalCategories(this.allPackagesCache);
+      this.topPackagesCache = regionalCategories;
+      console.log('[eSIM-GO] Updated regional categories:', this.topPackagesCache.length);
       
       // Планируем следующее обновление
       setTimeout(() => this.refreshCache(), this.cacheLifetime);
@@ -263,15 +293,54 @@ class EsimGoAPI {
     }
   }
 
+  // Получить все варианты региона (например, все тарифы "Global - Light")
+  async getRegionPackages(regionName) {
+    console.log('[eSIM-GO] Getting packages for region:', regionName);
+    
+    if (!this.allPackagesCache) {
+      console.warn('[eSIM-GO] Cache not ready for region search');
+      return { esims: [] };
+    }
+    
+    // Находим паттерн региона
+    const regionPatterns = {
+      'global-light': /global.*light/i,
+      'global-standard': /global.*standard/i,
+      'global-max': /global.*max/i,
+      'europe-usa': /europe.*usa|usa.*europe/i,
+      'south-east-europe': /south.*east.*europe/i,
+      'middle-east': /middle.*east/i,
+      'europe-usa-business': /europe.*usa.*business|business.*hub/i,
+      'americas': /americas.*us.*ca|americas/i,
+      'africa': /^africa/i,
+      'asia': /^asia/i,
+    };
+    
+    const pattern = regionPatterns[regionName];
+    if (!pattern) {
+      console.warn('[eSIM-GO] Unknown region:', regionName);
+      return { esims: [] };
+    }
+    
+    // Фильтруем все пакеты этого региона
+    const regionPackages = this.allPackagesCache.filter(p => pattern.test(p.name || ''));
+    
+    // Сортируем по приоритету (GB и дни)
+    const sorted = this.smartFilter(regionPackages, 50);
+    console.log('[eSIM-GO] Found', sorted.length, 'packages for region', regionName);
+    
+    return { esims: sorted };
+  }
+
   // Получить пакеты для страны
   async getPackages(countryCode) {
-    // Если страна не указана — возвращаем топ-10
+    // Если страна не указана — возвращаем региональные категории
     if (!countryCode) {
       if (this.topPackagesCache) {
-        console.log('[eSIM-GO] Returning top 10 packages');
+        console.log('[eSIM-GO] Returning regional categories');
         return { esims: this.topPackagesCache };
       }
-      console.warn('[eSIM-GO] Top packages not ready yet, falling back');
+      console.warn('[eSIM-GO] Regional categories not ready yet, falling back');
     }
     
     // Если страна указана — используем полный кэш + умную фильтрацию
