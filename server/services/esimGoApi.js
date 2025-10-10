@@ -192,32 +192,20 @@ class EsimGoAPI {
 
   // Получить детали пакета
   async getPackageDetails(packageId) {
-    const fromEnv = this.paths.packageDetails ? this.paths.packageDetails.replace(':id', packageId) : '';
-    const candidates = [
-      fromEnv,
-      `/v3/packages/${packageId}`,
-      `/v2.2/packages/${packageId}`,
-      `/packages/${packageId}`,
-      `/products/${packageId}`,
-      `/esims/${packageId}`,
-      `/esim/${packageId}`,
-    ].filter(Boolean);
-
-    const mapper = (p) => {
-      const price = p.price || p.amount || p.cost;
-      return {
-        id: p.id || p.packageId || p.code,
-        name: p.name || p.title,
-        data: p.data || p.dataVolume || p.size,
-        validity: p.validity || p.days || p.duration,
-        country: p.country || p.countryCode,
-        coverage: p.coverage || p.countries || [],
-        originalPrice: price,
-        price: parseFloat((price * this.marginMultiplier).toFixed(2)),
-      };
-    };
-
-    return this.tryEndpoints(candidates, 'GET', null, mapper);
+    // v2.5 API не имеет эндпоинта для деталей одного бандла, поэтому берём из каталога
+    try {
+      console.log('[eSIM-GO] getPackageDetails: looking for', packageId, 'in catalogue');
+      const allPackages = await this.getPackages();
+      const found = allPackages.esims.find(p => p.id === packageId);
+      if (found) {
+        console.log('[eSIM-GO] found package in catalogue:', found.name);
+        return found;
+      }
+      throw new Error(`Package ${packageId} not found in catalogue`);
+    } catch (e) {
+      console.warn('[eSIM-GO] getPackageDetails failed:', e.message);
+      throw e;
+    }
   }
 
   // Создать заказ
