@@ -31,7 +31,7 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
     try {
       const data = await getCountries();
       // Добавляем русские названия к каждой стране
-      const countriesWithRu = (data.countries || []).map(c => ({
+      const countriesWithRu = (data.countries || []).map((c: Country) => ({
         ...c,
         nameRu: getCountryNameRu(c.code),
       }));
