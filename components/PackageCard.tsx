@@ -38,7 +38,15 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
     
     // Если это региональная категория — показываем все варианты региона
     if (pkg.isRegionalCategory && pkg.regionName) {
-      const regionSlug = pkg.regionName.toLowerCase().replace(/\s+/g, '-').replace(/\+/g, '');
+      const regionSlug = pkg.regionName
+        .toLowerCase()
+        .replace(/\s*[-–—]\s*/g, '-')  // все тире → дефис
+        .replace(/\s*\+\s*/g, '-')      // плюсы → дефис
+        .replace(/\s+/g, '-')           // пробелы → дефис
+        .replace(/[^a-z0-9-]/g, '')     // только буквы, цифры, дефисы
+        .replace(/--+/g, '-')           // множественные → один
+        .replace(/^-|-$/g, '');         // убираем с краёв
+      
       router.push(`/region/${regionSlug}`);
     } else {
       router.push(`/checkout?package=${pkg.id}`);

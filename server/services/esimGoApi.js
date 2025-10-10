@@ -165,32 +165,32 @@ class EsimGoAPI {
         };
       };
       
-      // Загружаем первые 20 страниц сразу, чтобы найти региональные пакеты (они не на первой странице)
+      // Загружаем первые 5 страниц последовательно (не параллельно, чтобы не перегрузить API)
       let allBundles = firstPage.bundles || [];
-      const batchSize = 10;
       
-      console.log('[eSIM-GO] Loading first 20 pages to find regional packages...');
-      for (let i = 2; i <= 20 && i <= pageCount; i += batchSize) {
-        const promises = [];
-        for (let j = i; j < i + batchSize && j <= 20 && j <= pageCount; j++) {
-          promises.push(this.request(`${this.paths.packages}?page=${j}`));
-        }
-        const results = await Promise.all(promises);
-        for (const res of results) {
-          allBundles = allBundles.concat(res.bundles || []);
+      console.log('[eSIM-GO] Loading first 5 pages sequentially...');
+      for (let i = 2; i <= 5 && i <= pageCount; i++) {
+        try {
+          const pageData = await this.request(`${this.paths.packages}?page=${i}`);
+          allBundles = allBundles.concat(pageData.bundles || []);
+          // Небольшая задержка между запросами
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } catch (err) {
+          console.error('[eSIM-GO] Failed to load page', i, ':', err.message);
         }
       }
       
-      const first20Mapped = allBundles.map(mapBundle);
-      console.log('[eSIM-GO] Loaded', first20Mapped.length, 'packages from first 20 pages');
+      const first5Mapped = allBundles.map(mapBundle);
+      console.log('[eSIM-GO] Loaded', first5Mapped.length, 'packages from first 5 pages');
       
       // Топ региональных пакетов для главной: выбираем ОДНОГО представителя каждого региона
-      const regionalCategories = this.getRegionalCategories(first20Mapped);
-      this.topPackagesCache = regionalCategories.length > 0 ? regionalCategories : first20Mapped.slice(0, 10);
+      const regionalCategories = this.getRegionalCategories(first5Mapped);
+      this.topPackagesCache = regionalCategories.length > 0 ? regionalCategories : first5Mapped.slice(0, 10);
       console.log('[eSIM-GO] Regional categories ready:', this.topPackagesCache.length);
       
-      // Загружаем остальные страницы в фоне (21+)
-      for (let i = 21; i <= pageCount; i += batchSize) {
+      // Загружаем остальные страницы в фоне (6+), медленно чтобы не перегружать API
+      const batchSize = 5;
+      for (let i = 6; i <= pageCount; i += batchSize) {
         const promises = [];
         for (let j = i; j < i + batchSize && j <= pageCount; j++) {
           promises.push(this.request(`${this.paths.packages}?page=${j}`));
