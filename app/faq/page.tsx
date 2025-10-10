@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { hapticFeedback } from '@/lib/telegram';
+import BottomNav from '@/components/BottomNav';
 
 interface FAQItem {
   question: string;
@@ -155,6 +156,8 @@ export default function FAQPage() {
           </div>
         </div>
       </div>
+
+      <BottomNav />
     </main>
   );
 }

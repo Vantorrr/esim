@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import BottomNav from '@/components/BottomNav';
 
 interface Order {
   id: string;
@@ -123,6 +124,8 @@ export default function MyOrdersPage() {
           </div>
         )}
       </div>
+
+      <BottomNav />
     </main>
   );
 }

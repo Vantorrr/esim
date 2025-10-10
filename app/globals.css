@@ -31,6 +31,12 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Safe area для нижней навигации */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 a {

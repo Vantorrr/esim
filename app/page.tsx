@@ -7,6 +7,7 @@ import CountrySelector from '@/components/CountrySelector';
 import PackageList from '@/components/PackageList';
 import Footer from '@/components/Footer';
 import LoadingScreen from '@/components/LoadingScreen';
+import BottomNav from '@/components/BottomNav';
 
 export default function Home() {
   const [isReady, setIsReady] = useState(false);
@@ -73,6 +74,8 @@ export default function Home() {
       </section>
 
       <Footer />
+      
+      <BottomNav />
     </main>
   );
 }
