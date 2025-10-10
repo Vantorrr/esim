@@ -87,41 +87,43 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
   const isRegional = Array.isArray(pkg.coverage) && pkg.coverage.length > 3;
 
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-all animate-fade-in border-2 border-transparent hover:border-primary/20">
+    <div className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-xl transition-all animate-fade-in border-2 border-primary/10 hover:border-primary/30">
+      {/* Region/Country Name Header */}
+      <div className="flex items-center gap-2 mb-3">
+        <div className="text-3xl">{getRegionIcon()}</div>
+        <div className="flex-1">
+          <h3 className="text-lg font-bold text-text-primary">
+            {getRegionName()}
+          </h3>
+          {isRegional && pkg.coverage && (
+            <p className="text-xs text-text-secondary">
+              Покрытие: {pkg.coverage.length} {pkg.coverage.length > 100 ? 'стран' : pkg.coverage.slice(0, 3).join(', ')}
+              {pkg.coverage.length > 3 && ` +${pkg.coverage.length - 3}`}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Data, Days, Price, Button */}
       <div className="flex items-center justify-between">
-        {/* Left: Icon/Flag + Region/Country + Data + Days */}
-        <div className="flex items-center gap-3 flex-1">
-          <div className="text-4xl">{getRegionIcon()}</div>
-          <div className="flex flex-col gap-1">
-            {isRegional && (
-              <div className="text-xs font-bold text-secondary uppercase tracking-wide">
-                {getRegionName()}
-              </div>
-            )}
-            <div className="flex items-center gap-2 text-sm">
-              <span className="font-semibold text-text-primary flex items-center gap-1">
-                <DataIcon className="w-4 h-4 text-primary" />
-                {pkg.data}
-              </span>
-              <span className="text-text-secondary">•</span>
-              <span className="font-semibold text-text-primary flex items-center gap-1">
-                <ClockIcon className="w-4 h-4 text-secondary" />
-                {pkg.validity} {pkg.validity === 1 ? 'день' : 'дней'}
-              </span>
-            </div>
-          </div>
+        <div className="flex items-center gap-3">
+          <span className="px-3 py-1.5 bg-primary/10 text-primary rounded-xl font-semibold text-sm flex items-center gap-1">
+            <DataIcon className="w-4 h-4" />
+            {pkg.data}
+          </span>
+          <span className="px-3 py-1.5 bg-secondary/10 text-secondary rounded-xl font-semibold text-sm flex items-center gap-1">
+            <ClockIcon className="w-4 h-4" />
+            {pkg.validity} {pkg.validity === 1 ? 'день' : 'дней'}
+          </span>
         </div>
         
-        {/* Right: Price + Button */}
         <div className="flex items-center gap-3">
-          <div className="text-right">
-            <div className="text-2xl font-bold text-text-primary">
-              {priceInRub}₽
-            </div>
+          <div className="text-2xl font-bold text-text-primary">
+            {priceInRub}₽
           </div>
           <button
             onClick={handleBuy}
-            className="px-6 py-3 bg-gradient-primary text-white rounded-xl font-semibold hover:opacity-90 transition-opacity shadow-lg active:scale-95"
+            className="px-6 py-3 bg-gradient-primary text-white rounded-xl font-bold hover:opacity-90 transition-all shadow-lg hover:shadow-xl active:scale-95"
           >
             Купить
           </button>
