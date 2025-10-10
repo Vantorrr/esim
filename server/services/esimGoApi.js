@@ -81,18 +81,35 @@ class EsimGoAPI {
       '/locations',
     ].filter(Boolean);
     try {
-      return await this.tryEndpoints(candidates);
+      const res = await this.tryEndpoints(candidates);
+      // Попытка нормализации форматов ответа
+      if (Array.isArray(res)) return { countries: res };
+      if (res?.countries) return res;
+      if (res?.items) return { countries: res.items };
+      return { countries: [] };
     } catch (e) {
-      console.warn('[eSIM-GO] countries fallback → mock');
-      // Фоллбек, чтобы UI работал до уточнения схемы API
-      return {
-        countries: [
-          { code: 'US', name: 'United States', flag: '🇺🇸' },
-          { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
-          { code: 'FR', name: 'France', flag: '🇫🇷' },
-          { code: 'DE', name: 'Germany', flag: '🇩🇪' },
-        ],
-      };
+      console.warn('[eSIM-GO] countries direct failed → derive from bundles');
+      // Фоллбек: строим список стран из каталога бандлов
+      try {
+        const bundles = await this.getPackages();
+        const set = new Map();
+        for (const p of bundles.esims || []) {
+          const code = p.country || (Array.isArray(p.coverage) ? p.coverage[0] : undefined);
+          if (!code) continue;
+          if (!set.has(code)) set.set(code, { code, name: code });
+        }
+        return { countries: Array.from(set.values()) };
+      } catch (_) {
+        console.warn('[eSIM-GO] derive countries failed → mock');
+        return {
+          countries: [
+            { code: 'US', name: 'United States' },
+            { code: 'GB', name: 'United Kingdom' },
+            { code: 'FR', name: 'France' },
+            { code: 'DE', name: 'Germany' },
+          ],
+        };
+      }
     }
   }
 
@@ -137,11 +154,18 @@ class EsimGoAPI {
       return await this.tryEndpoints(withCountry, 'GET', null, mapper);
     } catch (e) {
       console.warn('[eSIM-GO] packages fallback → mock');
-      const mock = [
+      const all = [
+        { id: 'mock_us_3gb', name: 'USA 3GB / 7 days', data: '3GB', validity: 7, country: 'US', coverage: ['United States'], originalPrice: 6, price: 12 },
         { id: 'mock_us_5gb', name: 'USA 5GB / 30 days', data: '5GB', validity: 30, country: 'US', coverage: ['United States'], originalPrice: 10, price: 20 },
+        { id: 'mock_eu_5gb', name: 'Europe 5GB / 15 days', data: '5GB', validity: 15, country: 'EU', coverage: ['EU'], originalPrice: 12, price: 24 },
         { id: 'mock_eu_10gb', name: 'Europe 10GB / 30 days', data: '10GB', validity: 30, country: 'EU', coverage: ['EU'], originalPrice: 20, price: 40 },
+        { id: 'mock_asia_5gb', name: 'Asia 5GB / 30 days', data: '5GB', validity: 30, country: 'ASIA', coverage: ['TH', 'SG', 'JP', 'VN'], originalPrice: 14, price: 28 },
+        { id: 'mock_global_10gb', name: 'Global 10GB / 30 days', data: '10GB', validity: 30, country: 'GLOBAL', coverage: ['200+'], originalPrice: 35, price: 70 },
       ];
-      return { esims: mock };
+      if (!countryCode) return { esims: all };
+      // Фильтруем по стране, если запрошена
+      const filtered = all.filter(p => p.country === countryCode || (Array.isArray(p.coverage) && p.coverage.includes(countryCode)));
+      return { esims: filtered.length ? filtered : all.slice(0, 2) };
     }
   }
 
