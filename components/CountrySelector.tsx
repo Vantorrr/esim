@@ -44,7 +44,7 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
     onSelectCountry(countryCode === selectedCountry ? null : countryCode);
   };
 
-  const popularCountries = ['US', 'GB', 'FR', 'DE', 'IT', 'ES', 'TH', 'JP'];
+  const popularCountries = ['US', 'GB', 'FR', 'DE', 'IT', 'ES', 'TH', 'JP', 'AE', 'TR', 'GR', 'PT'];
 
   return (
     <div className="space-y-4">

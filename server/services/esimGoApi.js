@@ -158,12 +158,14 @@ class EsimGoAPI {
       return { countries: [] };
     } catch (e) {
       console.warn('[eSIM-GO] countries direct failed → derive from bundles');
-      // Фоллбек: строим список стран из каталога бандлов
+      // Фоллбек: строим список стран из ПОЛНОГО каталога (не топ-10!)
       try {
-        const bundles = await this.getPackages();
-        console.log('[eSIM-GO] getPackages returned:', bundles?.esims?.length || 0, 'packages');
+        // Используем полный кэш, если доступен
+        const packagesToUse = this.allPackagesCache || this.topPackagesCache || [];
+        console.log('[eSIM-GO] Deriving countries from', packagesToUse.length, 'packages');
+        
         const set = new Map();
-        for (const p of bundles.esims || []) {
+        for (const p of packagesToUse) {
           const code = p.country || (Array.isArray(p.coverage) ? p.coverage[0] : undefined);
           if (!code) continue;
           if (!set.has(code)) {
@@ -179,16 +181,18 @@ class EsimGoAPI {
           }
         }
         const countriesList = Array.from(set.values());
-        console.log('[eSIM-GO] derived', countriesList.length, 'countries from bundles');
+        console.log('[eSIM-GO] derived', countriesList.length, 'countries from cache');
         return { countries: countriesList };
       } catch (err) {
         console.warn('[eSIM-GO] derive countries failed:', err.message);
         return {
           countries: [
-            { code: 'US', name: 'United States' },
-            { code: 'GB', name: 'United Kingdom' },
-            { code: 'FR', name: 'France' },
-            { code: 'DE', name: 'Germany' },
+            { code: 'US', name: 'United States', flag: '🇺🇸' },
+            { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
+            { code: 'FR', name: 'France', flag: '🇫🇷' },
+            { code: 'DE', name: 'Germany', flag: '🇩🇪' },
+            { code: 'ES', name: 'Spain', flag: '🇪🇸' },
+            { code: 'IT', name: 'Italy', flag: '🇮🇹' },
           ],
         };
       }
