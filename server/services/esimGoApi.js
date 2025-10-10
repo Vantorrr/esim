@@ -83,10 +83,22 @@ class EsimGoAPI {
       const mapBundle = (p) => {
         const countryIso = p.countries?.[0]?.iso || p.country || p.countryCode;
         const countryName = p.countries?.[0]?.name || p.name;
+        
+        // Конвертируем MB в GB для удобства отображения
+        let dataDisplay = p.data || p.dataVolume || p.size;
+        if (p.dataAmount) {
+          const mb = p.dataAmount;
+          if (mb >= 1000) {
+            dataDisplay = `${mb / 1000}GB`;
+          } else {
+            dataDisplay = `${mb}MB`;
+          }
+        }
+        
         return {
           id: p.name || p.id || p.packageId || p.code,
           name: p.description || p.title || p.name,
-          data: p.dataAmount ? `${p.dataAmount}MB` : (p.data || p.dataVolume || p.size),
+          data: dataDisplay,
           validity: p.duration || p.validity || p.days,
           country: countryIso,
           countryName: countryName,
