@@ -73,7 +73,12 @@ function SuccessContent() {
       {/* Success Header */}
       <div className="bg-gradient-primary text-white py-12 px-4 text-center">
         <div className="max-w-4xl mx-auto">
-          <div className="text-6xl mb-4 animate-bounce">🎉</div>
+          <div className="w-24 h-24 mx-auto mb-4 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center animate-bounce">
+            <svg className="w-12 h-12 text-white" viewBox="0 0 24 24" fill="none">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
           <h1 className="text-3xl font-bold mb-2">Оплата успешна!</h1>
           <p className="text-xl opacity-90">Ваш eSIM готов к использованию</p>
         </div>
@@ -95,7 +100,15 @@ function SuccessContent() {
 
         {/* Next Steps */}
         <div className="bg-white rounded-2xl p-6">
-          <h2 className="text-xl font-bold text-text-primary mb-4">📋 Что дальше?</h2>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-6 h-6 text-primary">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M9 11l3 3L22 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-text-primary">Что дальше?</h2>
+          </div>
           
           <div className="space-y-4">
             <div className="flex gap-4">
@@ -150,7 +163,11 @@ function SuccessContent() {
 
         {/* Support */}
         <div className="bg-secondary/5 rounded-2xl p-6 flex gap-4">
-          <div className="text-3xl">💬</div>
+          <div className="w-12 h-12 flex-shrink-0 text-secondary">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
           <div className="flex-1">
             <h3 className="font-bold text-text-primary mb-1">Нужна помощь?</h3>
             <p className="text-sm text-text-secondary mb-3">
