@@ -39,16 +39,16 @@ class EsimGoAPI {
     }
     
     const regions = [
-      { name: 'Global - Light', pattern: /global.*light/i, icon: '🌍' },
-      { name: 'Global - Standard', pattern: /global.*standard/i, icon: '🌍' },
-      { name: 'Global - Max', pattern: /global.*max/i, icon: '🌍' },
-      { name: 'Europe + USA', pattern: /europe.*usa|usa.*europe/i, icon: '🇪🇺' },
-      { name: 'South East Europe', pattern: /south.*east.*europe/i, icon: '🇪🇺' },
-      { name: 'Middle East', pattern: /middle.*east/i, icon: '🕌' },
-      { name: 'Europe + USA + Business Hubs', pattern: /europe.*usa.*business|business.*hub/i, icon: '🇪🇺' },
-      { name: 'Americas + US + CA', pattern: /americas.*us.*ca|americas/i, icon: '🌎' },
-      { name: 'Africa', pattern: /^africa/i, icon: '🌍' },
-      { name: 'Asia', pattern: /^asia/i, icon: '🌏' },
+      { name: 'Global - Light', nameRu: 'Весь мир – Лайт', pattern: /global.*light/i, icon: '🌍' },
+      { name: 'Global - Standard', nameRu: 'Весь мир – Стандарт', pattern: /global.*standard/i, icon: '🌍' },
+      { name: 'Global - Max', nameRu: 'Весь мир – Макс', pattern: /global.*max/i, icon: '🌍' },
+      { name: 'Europe + USA', nameRu: 'Европа + США', pattern: /europe.*usa|usa.*europe/i, icon: '🇪🇺' },
+      { name: 'South East Europe', nameRu: 'Юго-Восточная Европа', pattern: /south.*east.*europe/i, icon: '🇪🇺' },
+      { name: 'Middle East', nameRu: 'Ближний Восток', pattern: /middle.*east/i, icon: '🕌' },
+      { name: 'Europe + USA + Business Hubs', nameRu: 'Европа + США + Деловые центры', pattern: /europe.*usa.*business|business.*hub/i, icon: '🇪🇺' },
+      { name: 'Americas + US + CA', nameRu: 'Америка + США + Канада', pattern: /americas.*us.*ca|americas/i, icon: '🌎' },
+      { name: 'Africa', nameRu: 'Африка', pattern: /^africa/i, icon: '🌍' },
+      { name: 'Asia', nameRu: 'Азия', pattern: /^asia/i, icon: '🌏' },
     ];
 
     const categories = [];
@@ -65,6 +65,7 @@ class EsimGoAPI {
             ...representative,
             isRegionalCategory: true,
             regionName: region.name,
+            regionNameRu: region.nameRu,
             regionIcon: region.icon,
             variantsCount: regionPackages.length,
           });

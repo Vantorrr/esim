@@ -20,6 +20,7 @@ interface Package {
   currencyRate?: number;
   isRegionalCategory?: boolean;
   regionName?: string;
+  regionNameRu?: string;
   regionIcon?: string;
   variantsCount?: number;
 }
@@ -80,7 +81,10 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
   };
 
   const getRegionName = () => {
-    // Если это региональная категория — используем её название
+    // Если это региональная категория — используем русское название
+    if (pkg.isRegionalCategory && pkg.regionNameRu) {
+      return pkg.regionNameRu;
+    }
     if (pkg.isRegionalCategory && pkg.regionName) {
       return pkg.regionName;
     }
