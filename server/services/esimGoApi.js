@@ -33,6 +33,11 @@ class EsimGoAPI {
 
   // Получаем региональные категории (по одному представителю каждого региона)
   getRegionalCategories(packages) {
+    if (!packages || !Array.isArray(packages)) {
+      console.warn('[eSIM-GO] getRegionalCategories: invalid packages');
+      return [];
+    }
+    
     const regions = [
       { name: 'Global - Light', pattern: /global.*light/i, icon: '🌍' },
       { name: 'Global - Standard', pattern: /global.*standard/i, icon: '🌍' },
@@ -49,19 +54,23 @@ class EsimGoAPI {
     const categories = [];
     
     for (const region of regions) {
-      // Находим все пакеты этого региона
-      const regionPackages = packages.filter(p => region.pattern.test(p.name || ''));
-      
-      if (regionPackages.length > 0) {
-        // Берём самый дешёвый как представителя категории
-        const representative = regionPackages.sort((a, b) => a.price - b.price)[0];
-        categories.push({
-          ...representative,
-          isRegionalCategory: true,
-          regionName: region.name,
-          regionIcon: region.icon,
-          variantsCount: regionPackages.length, // сколько вариантов в этой категории
-        });
+      try {
+        // Находим все пакеты этого региона
+        const regionPackages = packages.filter(p => p && p.name && region.pattern.test(p.name));
+        
+        if (regionPackages.length > 0) {
+          // Берём самый дешёвый как представителя категории
+          const representative = [...regionPackages].sort((a, b) => (a.price || 0) - (b.price || 0))[0];
+          categories.push({
+            ...representative,
+            isRegionalCategory: true,
+            regionName: region.name,
+            regionIcon: region.icon,
+            variantsCount: regionPackages.length,
+          });
+        }
+      } catch (err) {
+        console.error('[eSIM-GO] Error processing region', region.name, ':', err.message);
       }
     }
     
