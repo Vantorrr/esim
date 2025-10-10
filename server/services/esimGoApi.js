@@ -143,16 +143,21 @@ class EsimGoAPI {
         const countryName = p.countries?.[0]?.name || p.name;
         
         // Конвертируем MB в GB для удобства отображения
-        let dataDisplay = p.data || p.dataVolume || p.size;
-        if (p.dataAmount) {
+        let dataDisplay = '';
+        
+        if (p.dataAmount !== undefined && p.dataAmount !== null) {
           const mb = p.dataAmount;
           if (mb >= 1000) {
             const gb = mb / 1000;
-            // Убираем .0 если целое число
             dataDisplay = gb % 1 === 0 ? `${gb}GB` : `${gb.toFixed(1)}GB`;
-          } else {
+          } else if (mb > 0) {
             dataDisplay = `${mb}MB`;
+          } else {
+            dataDisplay = 'Unknown';
           }
+        } else {
+          // Фоллбек на другие поля
+          dataDisplay = p.data || p.dataVolume || p.size || 'Unknown';
         }
         
         return {
@@ -366,8 +371,10 @@ class EsimGoAPI {
   async getPackages(countryCode) {
     // Если страна не указана — возвращаем региональные категории
     if (!countryCode) {
-      if (this.topPackagesCache) {
-        console.log('[eSIM-GO] Returning regional categories');
+      if (this.topPackagesCache && this.topPackagesCache.length > 0) {
+        console.log('[eSIM-GO] Returning regional categories:', this.topPackagesCache.length);
+        const first = this.topPackagesCache[0];
+        console.log('[eSIM-GO] First category:', first?.regionNameRu || first?.name, '| isRegionalCategory:', first?.isRegionalCategory);
         return { esims: this.topPackagesCache };
       }
       console.warn('[eSIM-GO] Regional categories not ready yet, falling back');
