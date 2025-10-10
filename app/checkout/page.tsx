@@ -139,9 +139,12 @@ function CheckoutContent() {
               <span className="font-medium text-text-primary">{pkg.data}</span>
             </div>
             
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-start">
               <span className="text-text-secondary">Срок действия:</span>
-              <span className="font-medium text-text-primary">{pkg.validity} дней</span>
+              <div className="text-right">
+                <div className="font-medium text-text-primary">{pkg.validity} дней</div>
+                <div className="text-xs text-text-secondary mt-0.5">С момента активации</div>
+              </div>
             </div>
             
             <div className="border-t border-gray-200 pt-3 mt-3">
