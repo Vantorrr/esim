@@ -123,6 +123,12 @@ class EsimGoAPI {
 
   async refreshCache() {
     try {
+      if (!this.apiKey) {
+        console.warn('[eSIM-GO] API key not set, skipping cache refresh');
+        setTimeout(() => this.refreshCache(), 60 * 1000); // Повтор через минуту
+        return;
+      }
+      
       console.log('[eSIM-GO] Loading first page for top packages...');
       const firstPage = await this.request(`${this.paths.packages}?page=1`);
       const pageCount = firstPage.pageCount || 1;
