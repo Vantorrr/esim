@@ -92,15 +92,18 @@ class EsimGoAPI {
       // Фоллбек: строим список стран из каталога бандлов
       try {
         const bundles = await this.getPackages();
+        console.log('[eSIM-GO] getPackages returned:', bundles?.esims?.length || 0, 'packages');
         const set = new Map();
         for (const p of bundles.esims || []) {
           const code = p.country || (Array.isArray(p.coverage) ? p.coverage[0] : undefined);
           if (!code) continue;
           if (!set.has(code)) set.set(code, { code, name: code });
         }
-        return { countries: Array.from(set.values()) };
-      } catch (_) {
-        console.warn('[eSIM-GO] derive countries failed → mock');
+        const countriesList = Array.from(set.values());
+        console.log('[eSIM-GO] derived', countriesList.length, 'countries from bundles');
+        return { countries: countriesList };
+      } catch (err) {
+        console.warn('[eSIM-GO] derive countries failed:', err.message);
         return {
           countries: [
             { code: 'US', name: 'United States' },
@@ -134,19 +137,26 @@ class EsimGoAPI {
     ].filter(Boolean);
 
     const mapper = (resp) => {
-      // адаптируем разные структуры ответов
-      let items = resp?.packages || resp?.esims || resp?.items || resp;
+      // адаптируем разные структуры ответов: v2.5 возвращает {"bundles": [...]}
+      let items = resp?.bundles || resp?.packages || resp?.esims || resp?.items || resp;
       if (!Array.isArray(items)) items = items?.data || [];
-      const mapped = items.map((p) => ({
-        id: p.id || p.packageId || p.code,
-        name: p.name || p.title,
-        data: p.data || p.dataVolume || p.size,
-        validity: p.validity || p.days || p.duration,
-        country: p.country || p.countryCode,
-        coverage: p.coverage || p.countries || [],
-        originalPrice: p.price || p.amount || p.cost,
-        price: parseFloat(((p.price || p.amount || p.cost) * this.marginMultiplier).toFixed(2)),
-      }));
+      console.log('[eSIM-GO] mapper received', items.length, 'items');
+      const mapped = items.map((p) => {
+        // Извлекаем ISO коды стран из массива countries
+        const countryIso = p.countries?.[0]?.iso || p.country || p.countryCode;
+        const countryName = p.countries?.[0]?.name || p.name;
+        return {
+          id: p.name || p.id || p.packageId || p.code, // в v2.5 id = name (например, "esim_1GB_7D_AD_V2")
+          name: p.description || p.title || p.name,
+          data: p.dataAmount ? `${p.dataAmount}MB` : (p.data || p.dataVolume || p.size),
+          validity: p.duration || p.validity || p.days,
+          country: countryIso,
+          coverage: p.countries?.map(c => c.iso) || p.coverage || [],
+          originalPrice: p.price || p.amount || p.cost,
+          price: parseFloat(((p.price || p.amount || p.cost) * this.marginMultiplier).toFixed(2)),
+        };
+      });
+      console.log('[eSIM-GO] mapped to', mapped.length, 'esims');
       return { esims: mapped };
     };
 
