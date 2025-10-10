@@ -3,8 +3,8 @@ const axios = require('axios');
 class EsimGoAPI {
   constructor() {
     // Нормализуем базовый URL до origin (без /vX/...). Даже если в .env указана версия — отрежем её
-    // ВАЖНО: корректный домен API — api.esimgo.com (без дефиса)
-    const raw = process.env.ESIM_GO_API_URL || 'https://api.esimgo.com';
+    // Корректный домен API у провайдера с дефисом: api.esim-go.com
+    const raw = process.env.ESIM_GO_API_URL || 'https://api.esim-go.com';
     try {
       const u = new URL(raw);
       this.baseURL = `${u.protocol}//${u.host}`; // только origin
