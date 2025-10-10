@@ -97,7 +97,17 @@ class EsimGoAPI {
         for (const p of bundles.esims || []) {
           const code = p.country || (Array.isArray(p.coverage) ? p.coverage[0] : undefined);
           if (!code) continue;
-          if (!set.has(code)) set.set(code, { code, name: code });
+          if (!set.has(code)) {
+            // Генерируем emoji флаг из ISO кода (например, US → 🇺🇸)
+            const flag = code.length === 2 
+              ? String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 - 65 + c.charCodeAt(0)))
+              : '🌐';
+            set.set(code, { 
+              code, 
+              name: p.countryName || code,
+              flag 
+            });
+          }
         }
         const countriesList = Array.from(set.values());
         console.log('[eSIM-GO] derived', countriesList.length, 'countries from bundles');
@@ -151,6 +161,7 @@ class EsimGoAPI {
           data: p.dataAmount ? `${p.dataAmount}MB` : (p.data || p.dataVolume || p.size),
           validity: p.duration || p.validity || p.days,
           country: countryIso,
+          countryName: countryName, // сохраняем имя страны для countries list
           coverage: p.countries?.map(c => c.iso) || p.coverage || [],
           originalPrice: p.price || p.amount || p.cost,
           price: parseFloat(((p.price || p.amount || p.cost) * this.marginMultiplier).toFixed(2)),
