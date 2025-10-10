@@ -55,12 +55,27 @@ export default function MyOrdersPage() {
         <div className="max-w-4xl mx-auto">
           <button
             onClick={() => router.back()}
-            className="mb-4 text-white/80 hover:text-white transition-colors"
+            className="mb-6 flex items-center gap-2 text-white/90 hover:text-white transition-colors group"
           >
-            ← Назад
+            <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none">
+              <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Назад
           </button>
-          <h1 className="text-3xl font-bold mb-2">📦 Мои заказы</h1>
-          <p className="opacity-90">История ваших покупок eSIM</p>
+          
+          <div className="flex items-center gap-4 mb-3">
+            <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20">
+              <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <line x1="12" y1="22.08" x2="12" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold mb-1">Мои заказы</h1>
+              <p className="text-white/80">История ваших покупок eSIM</p>
+            </div>
+          </div>
         </div>
       </div>
 

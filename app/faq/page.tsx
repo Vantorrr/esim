@@ -76,12 +76,26 @@ export default function FAQPage() {
         <div className="max-w-4xl mx-auto">
           <button
             onClick={() => router.back()}
-            className="mb-4 text-white/80 hover:text-white transition-colors"
+            className="mb-6 flex items-center gap-2 text-white/90 hover:text-white transition-colors group"
           >
-            ← Назад
+            <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none">
+              <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Назад
           </button>
-          <h1 className="text-3xl font-bold mb-2">❓ FAQ</h1>
-          <p className="opacity-90">Часто задаваемые вопросы</p>
+          
+          <div className="flex items-center gap-4 mb-3">
+            <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20">
+              <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold mb-1">FAQ</h1>
+              <p className="text-white/80">Часто задаваемые вопросы</p>
+            </div>
+          </div>
         </div>
       </div>
 
