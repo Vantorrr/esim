@@ -126,7 +126,9 @@ class EsimGoAPI {
         if (p.dataAmount) {
           const mb = p.dataAmount;
           if (mb >= 1000) {
-            dataDisplay = `${mb / 1000}GB`;
+            const gb = mb / 1000;
+            // Убираем .0 если целое число
+            dataDisplay = gb % 1 === 0 ? `${gb}GB` : `${gb.toFixed(1)}GB`;
           } else {
             dataDisplay = `${mb}MB`;
           }
