@@ -27,8 +27,10 @@ class EsimGoAPI {
     this.topPackagesCache = null; // топ-10 для главной
     this.cacheTimestamp = null;
     this.cacheLifetime = 30 * 60 * 1000; // 30 минут
-    // Запускаем загрузку топ-10 сразу, остальное — в фоне
-    this.refreshCache();
+    // Запускаем загрузку топ-10 сразу, остальное — в фоне (async, не блокирует конструктор)
+    this.refreshCache().catch(err => {
+      console.error('[eSIM-GO] Initial cache load failed:', err.message);
+    });
   }
 
   // Получаем региональные категории (по одному представителю каждого региона)
