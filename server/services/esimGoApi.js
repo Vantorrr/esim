@@ -40,61 +40,46 @@ class EsimGoAPI {
       return [];
     }
     
-    // У провайдера eSIM-GO нет региональных пакетов — все посткладско
-    // Создаём виртуальные регионы согласно Excel от клиента
+    // Региональные пакеты eSIM-GO (согласно таблице клиента)
     const regions = [
-      { name: 'Middle East', nameRu: 'Ближний Восток', countries: ['AE', 'SA', 'QA', 'KW', 'OM', 'BH'], icon: '🕌' },
-      { name: 'Europe', nameRu: 'Европа', countries: ['FR', 'DE', 'IT', 'ES', 'GB', 'NL', 'BE', 'AT', 'CH', 'PT'], icon: '🇪🇺' },
-      { name: 'Asia', nameRu: 'Азия', countries: ['TH', 'SG', 'JP', 'CN', 'KR', 'HK', 'MY', 'ID', 'VN'], icon: '🌏' },
-      { name: 'Americas', nameRu: 'Америка', countries: ['US', 'CA', 'MX', 'BR', 'AR'], icon: '🌎' },
-      { name: 'Africa', nameRu: 'Африка', countries: ['ZA', 'EG', 'MA', 'KE', 'NG'], icon: '🌍' },
+      { name: 'Global - Light', nameRu: 'Весь мир – Лайт', pattern: /global.*light/i, icon: '🌍' },
+      { name: 'Global - Standard', nameRu: 'Весь мир – Стандарт', pattern: /global.*standard/i, icon: '🌍' },
+      { name: 'Global - Max', nameRu: 'Весь мир – Макс', pattern: /global.*max/i, icon: '🌍' },
+      { name: 'Europe + USA', nameRu: 'Европа + США', pattern: /europe.*usa|europe.*us[^a-z]/i, icon: '🇪🇺' },
+      { name: 'South East Europe', nameRu: 'Юго-Восточная Европа', pattern: /south.*east.*europe/i, icon: '🇪🇺' },
+      { name: 'Middle East', nameRu: 'Ближний Восток', pattern: /middle.*east/i, icon: '🕌' },
+      { name: 'Europe + Business Hubs', nameRu: 'Европа + Деловые центры', pattern: /europe.*business|business.*hub/i, icon: '🇪🇺' },
+      { name: 'Americas', nameRu: 'Америка', pattern: /americas/i, icon: '🌎' },
+      { name: 'Africa', nameRu: 'Африка', pattern: /africa/i, icon: '🌍' },
+      { name: 'Asia', nameRu: 'Азия', pattern: /asia/i, icon: '🌏' },
     ];
 
     const categories = [];
     
     for (const region of regions) {
       try {
-        // Находим пакеты для стран этого региона
-        const regionPackages = packages.filter(p => 
-          p && p.country && region.countries.includes(p.country)
-        );
+        // Ищем по паттерну в названии (description)
+        const regionPackages = packages.filter(p => p && p.name && region.pattern.test(p.name));
         
         if (regionPackages.length > 0) {
-          // Берём самый дешёвый пакет >= 1GB
-          const representative = [...regionPackages]
-            .filter(p => {
-              const dataStr = (p.data || '').toLowerCase();
-              // Фильтруем минимум 1GB
-              if (dataStr.includes('gb')) {
-                const gb = parseFloat(dataStr);
-                return gb >= 1;
-              }
-              if (dataStr.includes('mb')) {
-                const mb = parseInt(dataStr);
-                return mb >= 1000;
-              }
-              return false;
-            })
-            .sort((a, b) => (a.price || 0) - (b.price || 0))[0];
+          // Берём самый дешёвый пакет как представителя
+          const representative = [...regionPackages].sort((a, b) => (a.price || 0) - (b.price || 0))[0];
           
-          if (representative) {
-            categories.push({
-              ...representative,
-              isRegionalCategory: true,
-              regionName: region.name,
-              regionNameRu: region.nameRu,
-              regionIcon: region.icon,
-              regionCountries: region.countries,
-              variantsCount: regionPackages.length,
-            });
-          }
+          categories.push({
+            ...representative,
+            isRegionalCategory: true,
+            regionName: region.name,
+            regionNameRu: region.nameRu,
+            regionIcon: region.icon,
+            variantsCount: regionPackages.length,
+          });
         }
       } catch (err) {
         console.error('[eSIM-GO] Error processing region', region.name, ':', err.message);
       }
     }
     
-    console.log('[eSIM-GO] Created', categories.length, 'virtual regional categories');
+    console.log('[eSIM-GO] Found', categories.length, 'regional categories from', packages.length, 'packages');
     return categories;
   }
 
@@ -183,32 +168,12 @@ class EsimGoAPI {
         };
       };
       
-      // Загружаем первые 5 страниц последовательно (не параллельно, чтобы не перегрузить API)
+      // Загружаем ВСЕ страницы сразу батчами (региональные пакеты могут быть где угодно)
       let allBundles = firstPage.bundles || [];
+      const batchSize = 10;
       
-      console.log('[eSIM-GO] Loading first 5 pages sequentially...');
-      for (let i = 2; i <= 5 && i <= pageCount; i++) {
-        try {
-          const pageData = await this.request(`${this.paths.packages}?page=${i}`);
-          allBundles = allBundles.concat(pageData.bundles || []);
-          // Небольшая задержка между запросами
-          await new Promise(resolve => setTimeout(resolve, 100));
-        } catch (err) {
-          console.error('[eSIM-GO] Failed to load page', i, ':', err.message);
-        }
-      }
-      
-      const first5Mapped = allBundles.map(mapBundle);
-      console.log('[eSIM-GO] Loaded', first5Mapped.length, 'packages from first 5 pages');
-      
-      // Топ региональных пакетов для главной: выбираем ОДНОГО представителя каждого региона
-      const regionalCategories = this.getRegionalCategories(first5Mapped);
-      this.topPackagesCache = regionalCategories.length > 0 ? regionalCategories : first5Mapped.slice(0, 10);
-      console.log('[eSIM-GO] Regional categories ready:', this.topPackagesCache.length);
-      
-      // Загружаем остальные страницы в фоне (6+), медленно чтобы не перегружать API
-      const batchSize = 5;
-      for (let i = 6; i <= pageCount; i += batchSize) {
+      console.log('[eSIM-GO] Loading ALL pages to find regional packages...');
+      for (let i = 2; i <= pageCount; i += batchSize) {
         const promises = [];
         for (let j = i; j < i + batchSize && j <= pageCount; j++) {
           promises.push(this.request(`${this.paths.packages}?page=${j}`));
@@ -225,10 +190,10 @@ class EsimGoAPI {
       this.cacheTimestamp = Date.now();
       console.log('[eSIM-GO] Full cache refreshed:', this.allPackagesCache.length, 'packages');
       
-      // Обновляем региональные категории из полного кэша
-      const updatedCategories = this.getRegionalCategories(this.allPackagesCache);
-      this.topPackagesCache = updatedCategories;
-      console.log('[eSIM-GO] Updated regional categories:', this.topPackagesCache.length);
+      // Формируем региональные категории из ПОЛНОГО кэша
+      const regionalCategories = this.getRegionalCategories(this.allPackagesCache);
+      this.topPackagesCache = regionalCategories.length > 0 ? regionalCategories : this.allPackagesCache.slice(0, 10);
+      console.log('[eSIM-GO] Regional categories from full cache:', this.topPackagesCache.length);
       
       // Планируем следующее обновление
       setTimeout(() => this.refreshCache(), this.cacheLifetime);
@@ -345,7 +310,7 @@ class EsimGoAPI {
     }
   }
 
-  // Получить все варианты региона (возвращаем пакеты всех стран региона)
+  // Получить все варианты региона (все пакеты с таким названием региона)
   async getRegionPackages(regionSlug) {
     console.log('[eSIM-GO] Getting packages for region slug:', regionSlug);
     
@@ -354,26 +319,29 @@ class EsimGoAPI {
       return { esims: [] };
     }
     
-    // Маппинг slug → страны региона
-    const regionCountries = {
-      'middle-east': ['AE', 'SA', 'QA', 'KW', 'OM', 'BH', 'JO', 'IL'],
-      'europe': ['FR', 'DE', 'IT', 'ES', 'GB', 'NL', 'BE', 'AT', 'CH', 'PT', 'GR', 'SE', 'DK', 'NO', 'FI'],
-      'asia': ['TH', 'SG', 'JP', 'CN', 'KR', 'HK', 'MY', 'ID', 'VN', 'PH', 'IN'],
-      'americas': ['US', 'CA', 'MX', 'BR', 'AR', 'CL', 'CO', 'PE'],
-      'africa': ['ZA', 'EG', 'MA', 'KE', 'NG', 'GH', 'TZ'],
+    // Маппинг slug → паттерн для поиска
+    const regionPatterns = {
+      'global-light': /global.*light/i,
+      'global-standard': /global.*standard/i,
+      'global-max': /global.*max/i,
+      'europe-usa': /europe.*usa|europe.*us[^a-z]/i,
+      'south-east-europe': /south.*east.*europe/i,
+      'middle-east': /middle.*east/i,
+      'europe-business-hubs': /europe.*business|business.*hub/i,
+      'americas': /americas/i,
+      'africa': /africa/i,
+      'asia': /asia/i,
     };
     
-    const countries = regionCountries[regionSlug];
-    if (!countries) {
-      console.warn('[eSIM-GO] Unknown region slug:', regionSlug, '| Available:', Object.keys(regionCountries).join(', '));
+    const pattern = regionPatterns[regionSlug];
+    if (!pattern) {
+      console.warn('[eSIM-GO] Unknown region slug:', regionSlug, '| Available:', Object.keys(regionPatterns).join(', '));
       return { esims: [] };
     }
     
-    // Фильтруем пакеты для стран этого региона
-    const regionPackages = this.allPackagesCache.filter(p => 
-      p && p.country && countries.includes(p.country)
-    );
-    console.log('[eSIM-GO] Found', regionPackages.length, 'packages for', countries.length, 'countries in region', regionSlug);
+    // Фильтруем пакеты по паттерну
+    const regionPackages = this.allPackagesCache.filter(p => p && p.name && pattern.test(p.name));
+    console.log('[eSIM-GO] Found', regionPackages.length, 'packages matching pattern for', regionSlug);
     
     // Сортируем по приоритету (GB и дни)
     const sorted = this.smartFilter(regionPackages, 50);
