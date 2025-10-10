@@ -352,15 +352,57 @@ class EsimGoAPI {
 
   // Получить детали пакета
   async getPackageDetails(packageId) {
-    // v2.5 API не имеет эндпоинта для деталей одного бандла, поэтому берём из каталога
+    // v2.5 API не имеет эндпоинта для деталей одного бандла, поэтому ищем в полном кэше
     try {
-      console.log('[eSIM-GO] getPackageDetails: looking for', packageId, 'in catalogue');
-      const allPackages = await this.getPackages();
-      const found = allPackages.esims.find(p => p.id === packageId);
-      if (found) {
-        console.log('[eSIM-GO] found package in catalogue:', found.name);
-        return found;
+      console.log('[eSIM-GO] getPackageDetails: looking for', packageId);
+      
+      // Сначала ищем в полном кэше (если загружен)
+      if (this.allPackagesCache) {
+        const found = this.allPackagesCache.find(p => p.id === packageId);
+        if (found) {
+          console.log('[eSIM-GO] found in full cache:', found.name);
+          return found;
+        }
       }
+      
+      // Если нет в кэше — ищем в топ-10
+      if (this.topPackagesCache) {
+        const found = this.topPackagesCache.find(p => p.id === packageId);
+        if (found) {
+          console.log('[eSIM-GO] found in top cache:', found.name);
+          return found;
+        }
+      }
+      
+      // Если кэш ещё не готов — грузим весь каталог и ищем там
+      console.log('[eSIM-GO] Not in cache, searching in full catalogue...');
+      const firstPage = await this.request(`${this.paths.packages}?page=1`);
+      const pageCount = firstPage.pageCount || 1;
+      
+      for (let page = 1; page <= pageCount; page++) {
+        const pageData = page === 1 ? firstPage : await this.request(`${this.paths.packages}?page=${page}`);
+        const bundles = pageData.bundles || [];
+        
+        for (const bundle of bundles) {
+          if (bundle.name === packageId) {
+            console.log('[eSIM-GO] found package on page', page);
+            const countryIso = bundle.countries?.[0]?.iso;
+            const countryName = bundle.countries?.[0]?.name;
+            return {
+              id: bundle.name,
+              name: bundle.description,
+              data: bundle.dataAmount ? `${bundle.dataAmount}MB` : '',
+              validity: bundle.duration,
+              country: countryIso,
+              countryName: countryName,
+              coverage: bundle.countries?.map(c => c.iso) || [],
+              originalPrice: bundle.price,
+              price: parseFloat((bundle.price * this.marginMultiplier).toFixed(2)),
+            };
+          }
+        }
+      }
+      
       throw new Error(`Package ${packageId} not found in catalogue`);
     } catch (e) {
       console.warn('[eSIM-GO] getPackageDetails failed:', e.message);
