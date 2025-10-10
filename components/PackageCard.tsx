@@ -35,84 +35,49 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
     setIsExpanded(!isExpanded);
   };
 
-  const discount = Math.round(((pkg.originalPrice - pkg.price) / pkg.originalPrice) * 100);
+  // Конвертируем USD в RUB (курс ~95₽)
+  const priceInRub = Math.round(pkg.price * 95);
+
+  // Получаем флаг страны из ISO кода
+  const getCountryFlag = (code: string) => {
+    if (!code || code.length !== 2) return '🌐';
+    return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 - 65 + c.charCodeAt(0)));
+  };
 
   return (
-    <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow animate-fade-in">
-      <div className="p-5">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1">
-            <h3 className="text-lg font-bold text-text-primary mb-1">
-              {pkg.name}
-            </h3>
-            <div className="flex flex-wrap gap-2 text-sm">
-              <span className="px-3 py-1.5 bg-primary/10 text-primary rounded-xl font-medium flex items-center gap-1.5">
-                <DataIcon className="w-4 h-4" />
+    <div className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-all animate-fade-in">
+      <div className="flex items-center justify-between">
+        {/* Left: Flag + Data + Days */}
+        <div className="flex items-center gap-3">
+          <div className="text-3xl">{getCountryFlag(pkg.country)}</div>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="font-semibold text-text-primary flex items-center gap-1">
+                <DataIcon className="w-4 h-4 text-primary" />
                 {pkg.data}
               </span>
-              <span className="px-3 py-1.5 bg-secondary/10 text-secondary rounded-xl font-medium flex items-center gap-1.5">
-                <ClockIcon className="w-4 h-4" />
+              <span className="text-text-secondary">•</span>
+              <span className="font-semibold text-text-primary flex items-center gap-1">
+                <ClockIcon className="w-4 h-4 text-secondary" />
                 {pkg.validity} дней
               </span>
             </div>
           </div>
-          
-          <div className="text-right">
-            <div className="text-2xl font-bold text-text-primary">
-              ${pkg.price}
-            </div>
-            {pkg.originalPrice && pkg.originalPrice !== pkg.price && (
-              <div className="text-xs text-text-secondary line-through">
-                ${pkg.originalPrice}
-              </div>
-            )}
-          </div>
         </div>
-
-        {/* Coverage info */}
-        {isExpanded && pkg.coverage && pkg.coverage.length > 0 && (
-          <div className="mb-4 p-3 bg-background rounded-xl">
-            <p className="text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
-              <svg className="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="currentColor" strokeWidth="2"/>
-              </svg>
-              Покрытие:
-            </p>
-            <div className="flex flex-wrap gap-1">
-              {pkg.coverage.slice(0, 10).map((country, i) => (
-                <span
-                  key={i}
-                  className="text-xs px-2 py-1 bg-white rounded-lg text-text-secondary"
-                >
-                  {country}
-                </span>
-              ))}
-              {pkg.coverage.length > 10 && (
-                <span className="text-xs px-2 py-1 text-text-secondary">
-                  +{pkg.coverage.length - 10} ещё
-                </span>
-              )}
+        
+        {/* Right: Price + Button */}
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+            <div className="text-xl font-bold text-text-primary">
+              {priceInRub}₽
             </div>
           </div>
-        )}
-
-        <div className="flex gap-2">
           <button
             onClick={handleBuy}
-            className="flex-1 py-3 bg-gradient-primary text-white rounded-xl font-medium hover:opacity-90 transition-opacity"
+            className="px-6 py-2.5 bg-gradient-primary text-white rounded-xl font-medium hover:opacity-90 transition-opacity shadow-md active:scale-95"
           >
-            Купить сейчас
+            Купить
           </button>
-          
-          {pkg.coverage && pkg.coverage.length > 0 && (
-            <button
-              onClick={handleToggle}
-              className="px-4 py-3 bg-background text-text-primary rounded-xl hover:bg-primary/10 transition-colors"
-            >
-              {isExpanded ? '▲' : '▼'}
-            </button>
-          )}
         </div>
       </div>
     </div>
