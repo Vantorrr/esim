@@ -3,7 +3,16 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   images: {
-    domains: ['api.esim-go.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'api.esim-go.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.ibb.co',
+      },
+    ],
   },
   async rewrites() {
     return [
