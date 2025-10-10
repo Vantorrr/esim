@@ -16,7 +16,8 @@ router.post('/telegram-webhook', async (req, res) => {
 // Установить webhook
 router.post('/set-webhook', async (req, res) => {
   try {
-    const webhookUrl = `${process.env.WEBHOOK_URL || req.protocol + '://' + req.get('host')}/api/bot/telegram-webhook`;
+    const baseUrl = process.env.WEB_APP_URL || `${req.protocol}://${req.get('host')}`;
+    const webhookUrl = `${baseUrl}/api/bot/telegram-webhook`;
     
     const result = await bot.setWebHook(webhookUrl);
     
