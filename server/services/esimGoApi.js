@@ -169,7 +169,8 @@ class EsimGoAPI {
       
       // Топ региональных пакетов для главной: выбираем ОДНОГО представителя каждого региона
       const regionalCategories = this.getRegionalCategories(firstPageMapped);
-      this.topPackagesCache = regionalCategories;
+      // Если региональные не нашлись — берём просто первые 10 для старта
+      this.topPackagesCache = regionalCategories.length > 0 ? regionalCategories : firstPageMapped.slice(0, 10);
       console.log('[eSIM-GO] Regional categories ready:', this.topPackagesCache.length);
       
       // Загружаем остальные страницы в фоне
