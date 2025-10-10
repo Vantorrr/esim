@@ -194,8 +194,8 @@ class EsimGoAPI {
       console.log('[eSIM-GO] Full cache refreshed:', this.allPackagesCache.length, 'packages');
       
       // Обновляем региональные категории из полного кэша
-      const regionalCategories = this.getRegionalCategories(this.allPackagesCache);
-      this.topPackagesCache = regionalCategories;
+      const updatedCategories = this.getRegionalCategories(this.allPackagesCache);
+      this.topPackagesCache = updatedCategories;
       console.log('[eSIM-GO] Updated regional categories:', this.topPackagesCache.length);
       
       // Планируем следующее обновление
