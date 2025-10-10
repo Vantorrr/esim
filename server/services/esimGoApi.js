@@ -62,8 +62,10 @@ class EsimGoAPI {
         const regionPackages = packages.filter(p => p && p.name && region.pattern.test(p.name));
         
         if (regionPackages.length > 0) {
-          // Берём самый дешёвый пакет как представителя
-          const representative = [...regionPackages].sort((a, b) => (a.price || 0) - (b.price || 0))[0];
+          // Предпочитаем НЕ безлимитные пакеты как представителя
+          const limited = regionPackages.filter(p => !/unlimited|безлимит/i.test((p.data || '') + ' ' + (p.name || '')));
+          const pool = limited.length > 0 ? limited : regionPackages;
+          const representative = [...pool].sort((a, b) => (a.price || 0) - (b.price || 0))[0];
           
           categories.push({
             ...representative,
@@ -83,45 +85,63 @@ class EsimGoAPI {
     return categories;
   }
 
-  // Умная фильтрация по приоритету: 1GB/7д → 2GB/15д → 5GB/30д → 10GB/30д → 50GB/30д → безлимит
+  // Умная фильтрация: сперва приоритетные ограниченные пакеты, затем безлимит
   smartFilter(packages, limit = 10) {
-    const priorities = [
-      { data: 1000, validity: 7, priority: 1 },      // 1GB / 7 дней
-      { data: 2000, validity: 15, priority: 2 },     // 2GB / 15 дней
-      { data: 5000, validity: 30, priority: 3 },     // 5GB / 30 дней
-      { data: 10000, validity: 30, priority: 4 },    // 10GB / 30 дней
-      { data: 50000, validity: 30, priority: 5 },    // 50GB / 30 дней
-      // Безлимит (unlimited) — определяем по ключевому слову в description
-      { unlimited: true, validity: 1, priority: 6 },
-      { unlimited: true, validity: 3, priority: 7 },
-      { unlimited: true, validity: 5, priority: 8 },
-      { unlimited: true, validity: 7, priority: 9 },
-      { unlimited: true, validity: 15, priority: 10 },
-      { unlimited: true, validity: 30, priority: 11 },
-    ];
-
-    const getPriority = (pkg) => {
-      const isUnlimited = /unlimited|безлимит/i.test(pkg.name || '');
-      const dataInMB = parseInt(pkg.data) || 0;
-
-      for (const p of priorities) {
-        if (p.unlimited && isUnlimited && pkg.validity === p.validity) {
-          return p.priority;
-        }
-        if (!p.unlimited && dataInMB === p.data && pkg.validity === p.validity) {
-          return p.priority;
-        }
-      }
-      return 999; // Низкий приоритет для остальных
+    // Помощники
+    const parseDataToMb = (dataStr) => {
+      if (!dataStr) return 0;
+      if (/unlimited|безлимит/i.test(dataStr)) return -1; // маркер безлимита
+      const m = String(dataStr).match(/(\d+(?:\.\d+)?)\s*(GB|MB)/i);
+      if (!m) return 0;
+      const value = parseFloat(m[1]);
+      const unit = m[2].toUpperCase();
+      return unit === 'GB' ? Math.round(value * 1000) : Math.round(value);
     };
 
-    return packages
-      .map(pkg => ({ ...pkg, _priority: getPriority(pkg) }))
+    const priorities = [
+      { dataMb: 1000, validity: 7, order: 1 },   // 1GB/7
+      { dataMb: 2000, validity: 15, order: 2 },  // 2GB/15
+      { dataMb: 5000, validity: 30, order: 3 },  // 5GB/30
+      { dataMb: 10000, validity: 30, order: 4 }, // 10GB/30
+      { dataMb: 50000, validity: 30, order: 5 }, // 50GB/30
+    ];
+
+    const unlimitedValidityOrder = [1, 3, 5, 7, 15, 30];
+
+    const limited = [];
+    const unlimited = [];
+
+    for (const pkg of packages) {
+      const dataMb = parseDataToMb(pkg.data);
+      if (dataMb === -1) {
+        unlimited.push(pkg);
+      } else {
+        // Вычисляем приоритет для ограниченных
+        let pr = 999;
+        for (const p of priorities) {
+          if (dataMb === p.dataMb && pkg.validity === p.validity) {
+            pr = p.order;
+            break;
+          }
+        }
+        limited.push({ ...pkg, _priority: pr });
+      }
+    }
+
+    const limitedSorted = limited
+      .sort((a, b) => (a._priority !== b._priority ? a._priority - b._priority : a.price - b.price))
+      .map(({ _priority, ...rest }) => rest);
+
+    const unlimitedSorted = unlimited
       .sort((a, b) => {
-        if (a._priority !== b._priority) return a._priority - b._priority;
-        return a.price - b.price; // При равном приоритете — по цене
-      })
-      .slice(0, limit);
+        const ai = unlimitedValidityOrder.indexOf(a.validity);
+        const bi = unlimitedValidityOrder.indexOf(b.validity);
+        if (ai !== bi) return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+        return a.price - b.price;
+      });
+
+    const result = [...limitedSorted, ...unlimitedSorted];
+    return result.slice(0, limit);
   }
 
   async refreshCache() {
