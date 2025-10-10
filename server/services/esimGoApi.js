@@ -98,10 +98,14 @@ class EsimGoAPI {
       
       const firstPageMapped = (firstPage.bundles || []).map(mapBundle);
       
-      // Топ-10 для Таиланда (популярное направление): умная фильтрация
-      const thaiPackages = firstPageMapped.filter(p => p.country === 'TH');
-      this.topPackagesCache = this.smartFilter(thaiPackages, 10);
-      console.log('[eSIM-GO] Top 10 packages ready for Thailand');
+      // Топ региональных пакетов для главной (мультистрановые долгосрочные)
+      const regionalPackages = firstPageMapped.filter(p => 
+        // Региональный = много стран в покрытии ИЛИ ключевые слова в названии
+        (Array.isArray(p.coverage) && p.coverage.length > 3) ||
+        /global|europe|asia|america|africa|middle\s*east/i.test(p.name || '')
+      );
+      this.topPackagesCache = this.smartFilter(regionalPackages, 15);
+      console.log('[eSIM-GO] Top regional packages ready:', this.topPackagesCache.length);
       
       // Загружаем остальные страницы в фоне
       let allBundles = firstPage.bundles || [];
@@ -123,6 +127,14 @@ class EsimGoAPI {
       this.allPackagesCache = allBundles.map(mapBundle);
       this.cacheTimestamp = Date.now();
       console.log('[eSIM-GO] Full cache refreshed:', this.allPackagesCache.length, 'packages');
+      
+      // Обновляем топ региональных пакетов из полного кэша
+      const allRegionalPackages = this.allPackagesCache.filter(p => 
+        (Array.isArray(p.coverage) && p.coverage.length > 3) ||
+        /global|europe|asia|america|africa|middle\s*east/i.test(p.name || '')
+      );
+      this.topPackagesCache = this.smartFilter(allRegionalPackages, 15);
+      console.log('[eSIM-GO] Updated top regional packages:', this.topPackagesCache.length);
       
       // Планируем следующее обновление
       setTimeout(() => this.refreshCache(), this.cacheLifetime);

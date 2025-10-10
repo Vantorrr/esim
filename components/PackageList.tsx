@@ -115,7 +115,7 @@ export default function PackageList({ country }: PackageListProps) {
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-text-primary">
-            {country ? 'Доступные тарифы' : '🔥 Популярные направления'}
+            {country ? '📱 Доступные тарифы' : '🌍 Долгосрочные пакеты'}
           </h2>
         </div>
         <span className="text-sm text-text-secondary">
