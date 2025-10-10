@@ -1,0 +1,39 @@
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const esimRoutes = require('./routes/esim');
+const paymentRoutes = require('./routes/payment');
+const webhookRoutes = require('./routes/webhook');
+const tinkoffRoutes = require('./routes/tinkoff');
+const esimGoWebhookRoutes = require('./routes/esimGoWebhook');
+
+const app = express();
+const PORT = process.env.PORT || 8080;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Routes
+app.use('/api/esim', esimRoutes);
+app.use('/api/payment', paymentRoutes);
+app.use('/api/webhook', webhookRoutes);
+app.use('/api/webhook', esimGoWebhookRoutes);
+app.use('/api/tinkoff', tinkoffRoutes);
+
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Internal server error', message: err.message });
+});
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+});
+
