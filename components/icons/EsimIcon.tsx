@@ -1,13 +1,50 @@
 export default function EsimIcon({ className = "w-6 h-6", active = false }: { className?: string; active?: boolean }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path 
-        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" 
-        fill={active ? "currentColor" : "currentColor"}
-        opacity={active ? "1" : "0.6"}
+      {/* Внешний контур глобуса */}
+      <circle 
+        cx="12" 
+        cy="12" 
+        r="9" 
+        stroke="currentColor" 
+        strokeWidth="2"
+        fill={active ? "currentColor" : "none"}
+        fillOpacity={active ? "0.1" : "0"}
       />
-      <rect x="7" y="9" width="10" height="6" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-      <path d="M9 11h2M9 13h2M13 11h2M13 13h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      
+      {/* Меридианы */}
+      <path 
+        d="M12 3a15.3 15.3 0 0 1 4 9 15.3 15.3 0 0 1-4 9 15.3 15.3 0 0 1-4-9 15.3 15.3 0 0 1 4-9z" 
+        stroke="currentColor" 
+        strokeWidth="2"
+      />
+      
+      {/* Экватор */}
+      <path 
+        d="M3 12h18" 
+        stroke="currentColor" 
+        strokeWidth="2"
+      />
+      
+      {/* SIM чип в центре */}
+      <rect 
+        x="9.5" 
+        y="10" 
+        width="5" 
+        height="4" 
+        rx="0.5" 
+        stroke="currentColor" 
+        strokeWidth="1.5"
+        fill={active ? "currentColor" : "none"}
+      />
+      
+      {/* Контакты чипа */}
+      <path 
+        d="M10.5 11.5h1M13.5 11.5h1M10.5 12.5h1M13.5 12.5h1" 
+        stroke="currentColor" 
+        strokeWidth="1" 
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
