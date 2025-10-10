@@ -49,7 +49,7 @@ export default function MyOrdersPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background pb-8">
+    <main className="min-h-screen bg-background pb-24">
       {/* Header */}
       <div className="bg-gradient-primary text-white py-12 px-4">
         <div className="max-w-4xl mx-auto">
