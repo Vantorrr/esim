@@ -456,8 +456,19 @@ class EsimGoAPI {
       );
       console.log('[eSIM-GO] filtered to', packages.length, 'packages for', countryCode);
       
+      // Дедупликаты по (data + validity) — оставляем самый дешёвый
+      const uniqueMap = new Map();
+      for (const pkg of packages) {
+        const key = `${pkg.data}_${pkg.validity}`;
+        const existing = uniqueMap.get(key);
+        if (!existing || pkg.price < existing.price) {
+          uniqueMap.set(key, pkg);
+        }
+      }
+      const deduped = Array.from(uniqueMap.values());
+      
       // Применяем умную фильтрацию: топ-10 по приоритету
-      const smartFiltered = this.smartFilter(packages, 10);
+      const smartFiltered = this.smartFilter(deduped, 10);
       console.log('[eSIM-GO] smart filtered to', smartFiltered.length, 'packages');
       return { esims: smartFiltered };
     }
@@ -465,11 +476,21 @@ class EsimGoAPI {
     // Если полный кэш ещё не готов, но есть топ-10 — возвращаем топ-10 с фильтрацией
     if (countryCode && this.topPackagesCache) {
       console.warn('[eSIM-GO] Full cache not ready, using top 10 with filter');
-      const packages = this.topPackagesCache.filter(p => 
+      let packages = this.topPackagesCache.filter(p => 
         p.country === countryCode || 
         (Array.isArray(p.coverage) && p.coverage.includes(countryCode))
       );
-      return { esims: packages };
+      // Дедупликаты по (data + validity) — оставляем самый дешёвый
+      const uniqueMap = new Map();
+      for (const pkg of packages) {
+        const key = `${pkg.data}_${pkg.validity}`;
+        const existing = uniqueMap.get(key);
+        if (!existing || pkg.price < existing.price) {
+          uniqueMap.set(key, pkg);
+        }
+      }
+      packages = Array.from(uniqueMap.values());
+      return { esims: this.smartFilter(packages, 10) };
     }
     
     // Фоллбек: если кэш ещё не загружен, используем старую логику (первые 50)
