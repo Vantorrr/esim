@@ -6,6 +6,7 @@ const paymentRoutes = require('./routes/payment');
 const webhookRoutes = require('./routes/webhook');
 const tinkoffRoutes = require('./routes/tinkoff');
 const esimGoWebhookRoutes = require('./routes/esimGoWebhook');
+const botRoutes = require('./routes/bot');
 
 // Запускаем Telegram бота
 if (process.env.TELEGRAM_BOT_TOKEN) {
@@ -33,6 +34,7 @@ app.use('/api/payment', paymentRoutes);
 app.use('/api/webhook', webhookRoutes);
 app.use('/api/webhook', esimGoWebhookRoutes);
 app.use('/api/tinkoff', tinkoffRoutes);
+app.use('/api/bot', botRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

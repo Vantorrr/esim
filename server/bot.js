@@ -11,9 +11,14 @@ if (!token) {
   process.exit(1);
 }
 
-const bot = new TelegramBot(token, { polling: true });
+// Используем webhook вместо polling для production
+const useWebhook = process.env.NODE_ENV === 'production';
 
-console.log('🤖 Telegram бот запущен!');
+const bot = useWebhook 
+  ? new TelegramBot(token)  // Без polling для production
+  : new TelegramBot(token, { polling: true });  // С polling для dev
+
+console.log(`🤖 Telegram бот запущен! (режим: ${useWebhook ? 'webhook' : 'polling'})`);
 
 // Кнопки меню - только главное!
 const mainMenu = {

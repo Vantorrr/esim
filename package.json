@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "node server/index.js",
     "start:next": "next start",
+    "start:full": "node server/server-with-next.js",
     "server": "node server/index.js",
     "server:dev": "nodemon server/index.js"
   },
