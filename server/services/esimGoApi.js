@@ -16,9 +16,11 @@ class EsimGoAPI {
     // чтобы быстро подстроиться под фактическую схему провайдера
     this.paths = {
       countries: process.env.ESIM_GO_COUNTRIES_PATH || '',
-      packages: process.env.ESIM_GO_PACKAGES_PATH || '',
-      packageDetails: process.env.ESIM_GO_PACKAGE_DETAILS_PATH || '', // ожидает :id
-      orders: process.env.ESIM_GO_ORDERS_PATH || '',
+      // По умолчанию используем v2.5 каталог бандлов, согласно документации: Guides → Reference → API v2.5 → Catalogue → Get Bundle catalogue
+      // https://docs.esim-go.com/guides/setup_esimgo_account/
+      packages: process.env.ESIM_GO_PACKAGES_PATH || '/v2.5/catalogue/bundles',
+      packageDetails: process.env.ESIM_GO_PACKAGE_DETAILS_PATH || '/v2.5/catalogue/bundles/:id', // ожидает :id
+      orders: process.env.ESIM_GO_ORDERS_PATH || '/v2.5/orders',
     };
   }
 
