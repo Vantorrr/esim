@@ -145,19 +145,20 @@ class EsimGoAPI {
         // Конвертируем MB в GB для удобства отображения
         let dataDisplay = '';
         
-        if (p.dataAmount !== undefined && p.dataAmount !== null) {
+        // Проверяем unlimited
+        if (p.unlimited === true || p.dataAmount === -1) {
+          dataDisplay = 'Unlimited';
+        } else if (p.dataAmount !== undefined && p.dataAmount !== null && p.dataAmount > 0) {
           const mb = p.dataAmount;
           if (mb >= 1000) {
             const gb = mb / 1000;
             dataDisplay = gb % 1 === 0 ? `${gb}GB` : `${gb.toFixed(1)}GB`;
-          } else if (mb > 0) {
-            dataDisplay = `${mb}MB`;
           } else {
-            dataDisplay = 'Unknown';
+            dataDisplay = `${mb}MB`;
           }
         } else {
           // Фоллбек на другие поля
-          dataDisplay = p.data || p.dataVolume || p.size || 'Unknown';
+          dataDisplay = p.data || p.dataVolume || p.size || '1GB';
         }
         
         return {
