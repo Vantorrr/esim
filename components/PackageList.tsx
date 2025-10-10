@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { getPackages } from '@/lib/api';
 import PackageCard from './PackageCard';
-import { filterAndSortTariffs, getDefaultTariffs } from '@/lib/tariffFilter';
 
 interface Package {
   id: string;
@@ -36,16 +35,8 @@ export default function PackageList({ country }: PackageListProps) {
     
     try {
       const data = await getPackages(country || undefined);
-      const allPackages = data.esims || [];
-      
-      // Умная фильтрация: 
-      // - Если страна выбрана → фильтруем до 10 лучших тарифов
-      // - Если страна не выбрана → показываем топ-10 тарифов Таиланда (популярное направление)
-      const filtered = country 
-        ? filterAndSortTariffs(allPackages, 10)
-        : getDefaultTariffs(allPackages, 'TH', 10);
-      
-      setPackages(filtered);
+      // Сервер уже возвращает отфильтрованные и отсортированные тарифы
+      setPackages(data.esims || []);
     } catch (err: any) {
       setError(err.message || 'Failed to load packages');
       console.error('Failed to load packages:', err);
