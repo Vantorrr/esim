@@ -173,32 +173,55 @@ class EsimGoAPI {
         };
       };
       
-      // Загружаем ВСЕ страницы сразу батчами (региональные пакеты могут быть где угодно)
+      // Ставим первую страницу как временный топ (чтобы что-то показать сразу)
+      const firstPageMapped = (firstPage.bundles || []).map(mapBundle);
+      this.topPackagesCache = firstPageMapped.slice(0, 10);
+      this.allPackagesCache = firstPageMapped;
+      console.log('[eSIM-GO] Initial cache ready:', this.topPackagesCache.length, 'packages');
+      
+      // Загружаем остальные страницы МЕДЛЕННО в фоне (по 1 странице каждые 500ms)
       let allBundles = firstPage.bundles || [];
-      const batchSize = 10;
       
-      console.log('[eSIM-GO] Loading ALL pages to find regional packages...');
-      for (let i = 2; i <= pageCount; i += batchSize) {
-        const promises = [];
-        for (let j = i; j < i + batchSize && j <= pageCount; j++) {
-          promises.push(this.request(`${this.paths.packages}?page=${j}`));
+      console.log('[eSIM-GO] Starting background loading of remaining', pageCount - 1, 'pages...');
+      
+      const loadNextPage = async (pageNum) => {
+        if (pageNum > pageCount) {
+          // Все страницы загружены
+          this.allPackagesCache = allBundles.map(mapBundle);
+          this.cacheTimestamp = Date.now();
+          console.log('[eSIM-GO] Full cache completed:', this.allPackagesCache.length, 'packages');
+          
+          // Формируем региональные категории из ПОЛНОГО кэша
+          const regionalCategories = this.getRegionalCategories(this.allPackagesCache);
+          if (regionalCategories.length > 0) {
+            this.topPackagesCache = regionalCategories;
+            console.log('[eSIM-GO] Regional categories updated:', this.topPackagesCache.length);
+          }
+          
+          // Планируем следующее обновление через 30 минут
+          setTimeout(() => this.refreshCache(), this.cacheLifetime);
+          return;
         }
-        const results = await Promise.all(promises);
-        for (const res of results) {
-          allBundles = allBundles.concat(res.bundles || []);
+        
+        try {
+          const pageData = await this.request(`${this.paths.packages}?page=${pageNum}`);
+          allBundles = allBundles.concat(pageData.bundles || []);
+          
+          if (pageNum % 10 === 0) {
+            console.log('[eSIM-GO] Background: loaded', pageNum, '/', pageCount, '| Total:', allBundles.length);
+          }
+          
+          // Следующая страница через 500ms
+          setTimeout(() => loadNextPage(pageNum + 1), 500);
+        } catch (err) {
+          console.error('[eSIM-GO] Failed to load page', pageNum, ':', err.message);
+          // Повторяем через 2 секунды при ошибке
+          setTimeout(() => loadNextPage(pageNum + 1), 2000);
         }
-        console.log('[eSIM-GO] Loaded pages', i, '-', Math.min(i + batchSize - 1, pageCount), '| Total:', allBundles.length);
-      }
+      };
       
-      // Маппим все бандлы
-      this.allPackagesCache = allBundles.map(mapBundle);
-      this.cacheTimestamp = Date.now();
-      console.log('[eSIM-GO] Full cache refreshed:', this.allPackagesCache.length, 'packages');
-      
-      // Формируем региональные категории из ПОЛНОГО кэша
-      const regionalCategories = this.getRegionalCategories(this.allPackagesCache);
-      this.topPackagesCache = regionalCategories.length > 0 ? regionalCategories : this.allPackagesCache.slice(0, 10);
-      console.log('[eSIM-GO] Regional categories from full cache:', this.topPackagesCache.length);
+      // Начинаем фоновую загрузку со страницы 2
+      setTimeout(() => loadNextPage(2), 500);
       
       // Планируем следующее обновление
       setTimeout(() => this.refreshCache(), this.cacheLifetime);
