@@ -165,19 +165,32 @@ class EsimGoAPI {
         };
       };
       
-      const firstPageMapped = (firstPage.bundles || []).map(mapBundle);
-      
-      // Топ региональных пакетов для главной: выбираем ОДНОГО представителя каждого региона
-      const regionalCategories = this.getRegionalCategories(firstPageMapped);
-      // Если региональные не нашлись — берём просто первые 10 для старта
-      this.topPackagesCache = regionalCategories.length > 0 ? regionalCategories : firstPageMapped.slice(0, 10);
-      console.log('[eSIM-GO] Regional categories ready:', this.topPackagesCache.length);
-      
-      // Загружаем остальные страницы в фоне
+      // Загружаем первые 20 страниц сразу, чтобы найти региональные пакеты (они не на первой странице)
       let allBundles = firstPage.bundles || [];
       const batchSize = 10;
       
-      for (let i = 2; i <= pageCount; i += batchSize) {
+      console.log('[eSIM-GO] Loading first 20 pages to find regional packages...');
+      for (let i = 2; i <= 20 && i <= pageCount; i += batchSize) {
+        const promises = [];
+        for (let j = i; j < i + batchSize && j <= 20 && j <= pageCount; j++) {
+          promises.push(this.request(`${this.paths.packages}?page=${j}`));
+        }
+        const results = await Promise.all(promises);
+        for (const res of results) {
+          allBundles = allBundles.concat(res.bundles || []);
+        }
+      }
+      
+      const first20Mapped = allBundles.map(mapBundle);
+      console.log('[eSIM-GO] Loaded', first20Mapped.length, 'packages from first 20 pages');
+      
+      // Топ региональных пакетов для главной: выбираем ОДНОГО представителя каждого региона
+      const regionalCategories = this.getRegionalCategories(first20Mapped);
+      this.topPackagesCache = regionalCategories.length > 0 ? regionalCategories : first20Mapped.slice(0, 10);
+      console.log('[eSIM-GO] Regional categories ready:', this.topPackagesCache.length);
+      
+      // Загружаем остальные страницы в фоне (21+)
+      for (let i = 21; i <= pageCount; i += batchSize) {
         const promises = [];
         for (let j = i; j < i + batchSize && j <= pageCount; j++) {
           promises.push(this.request(`${this.paths.packages}?page=${j}`));
