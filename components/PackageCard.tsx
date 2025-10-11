@@ -137,11 +137,13 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
               <DataIcon className="w-3.5 h-3.5" />
               {pkg.data}
             </span>
-            {Array.isArray(pkg.coverage) && pkg.coverage.length > 1 && (
+            {Array.isArray((pkg as any).regionCoverage) && (pkg as any).regionCoverage.length > 1 ? (
+              <span className="text-xs text-text-secondary">· {(pkg as any).regionCoverage.length} стран</span>
+            ) : Array.isArray(pkg.coverage) && pkg.coverage.length > 1 ? (
               <span className="text-xs text-text-secondary">
                 · {pkg.coverage.length} стран
               </span>
-            )}
+            ) : null}
           </div>
         </div>
         

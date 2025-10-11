@@ -147,7 +147,17 @@ function CheckoutContent() {
               </div>
             </div>
 
-            {Array.isArray(pkg.coverage) && pkg.coverage.length > 0 && (
+            {Array.isArray((pkg as any).regionCoverage) && (pkg as any).regionCoverage.length > 0 ? (
+              <div className="flex justify-between items-start">
+                <span className="text-text-secondary">Покрытие:</span>
+                <button
+                  onClick={() => alert(((pkg as any).regionCoverage || []).join(', '))}
+                  className="text-right text-sm text-primary underline-offset-2 hover:underline"
+                >
+                  {(pkg as any).regionCoverage.length} стран(ы)
+                </button>
+              </div>
+            ) : Array.isArray(pkg.coverage) && pkg.coverage.length > 0 && (
               <div className="flex justify-between items-start">
                 <span className="text-text-secondary">Покрытие:</span>
                 <button

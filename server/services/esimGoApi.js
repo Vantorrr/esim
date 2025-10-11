@@ -66,6 +66,13 @@ class EsimGoAPI {
           const limited = regionPackages.filter(p => !/unlimited|безлимит/i.test((p.data || '') + ' ' + (p.name || '')));
           const pool = limited.length > 0 ? limited : regionPackages;
           const representative = [...pool].sort((a, b) => (a.price || 0) - (b.price || 0))[0];
+          // Собираем агрегированное покрытие региона (уникальные ISO)
+          const coverageSet = new Set();
+          for (const rp of regionPackages) {
+            if (Array.isArray(rp.coverage)) {
+              for (const iso of rp.coverage) coverageSet.add(iso);
+            }
+          }
           
           categories.push({
             ...representative,
@@ -75,6 +82,7 @@ class EsimGoAPI {
             regionIcon: region.icon,
             variantsCount: regionPackages.length,
             _order: region.order || 999,
+            regionCoverage: Array.from(coverageSet),
           });
         }
       } catch (err) {
