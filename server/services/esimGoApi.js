@@ -40,18 +40,18 @@ class EsimGoAPI {
       return [];
     }
     
-    // Региональные пакеты eSIM-GO (согласно таблице клиента)
+    // Региональные пакеты с заданным порядком показа (чтобы Global не шли подряд)
     const regions = [
-      { name: 'Global - Light', nameRu: 'Весь мир – Лайт', pattern: /global.*light/i, icon: '🌍' },
-      { name: 'Global - Standard', nameRu: 'Весь мир – Стандарт', pattern: /global.*standard/i, icon: '🌍' },
-      { name: 'Global - Max', nameRu: 'Весь мир – Макс', pattern: /global.*max/i, icon: '🌍' },
-      { name: 'Europe + USA', nameRu: 'Европа + США', pattern: /europe.*usa|europe.*us[^a-z]/i, icon: '🇪🇺' },
-      { name: 'South East Europe', nameRu: 'Юго-Восточная Европа', pattern: /south.*east.*europe/i, icon: '🇪🇺' },
-      { name: 'Middle East', nameRu: 'Ближний Восток', pattern: /middle.*east/i, icon: '🕌' },
-      { name: 'Europe + Business Hubs', nameRu: 'Европа + Деловые центры', pattern: /europe.*business|business.*hub/i, icon: '🇪🇺' },
-      { name: 'Americas', nameRu: 'Америка', pattern: /americas/i, icon: '🌎' },
-      { name: 'Africa', nameRu: 'Африка', pattern: /africa/i, icon: '🌍' },
-      { name: 'Asia', nameRu: 'Азия', pattern: /asia/i, icon: '🌏' },
+      { order: 1,  name: 'Global - Light',        nameRu: 'Весь мир – Лайт',        pattern: /global.*light/i,     icon: '🌍' },
+      { order: 2,  name: 'Europe + USA',          nameRu: 'Европа + США',           pattern: /europe.*usa|europe.*us[^a-z]/i, icon: '🇪🇺' },
+      { order: 3,  name: 'Middle East',           nameRu: 'Ближний Восток',          pattern: /middle.*east/i,      icon: '🕌' },
+      { order: 4,  name: 'Global - Standard',     nameRu: 'Весь мир – Стандарт',     pattern: /global.*standard/i,  icon: '🌍' },
+      { order: 5,  name: 'Asia',                  nameRu: 'Азия',                    pattern: /asia/i,              icon: '🌏' },
+      { order: 6,  name: 'Americas',              nameRu: 'Америка',                 pattern: /americas/i,          icon: '🌎' },
+      { order: 7,  name: 'Africa',                nameRu: 'Африка',                  pattern: /africa/i,            icon: '🌍' },
+      { order: 8,  name: 'Europe + Business Hubs',nameRu: 'Европа + Деловые центры', pattern: /europe.*business|business.*hub/i, icon: '🇪🇺' },
+      { order: 9,  name: 'South East Europe',     nameRu: 'Юго-Восточная Европа',    pattern: /south.*east.*europe/i, icon: '🇪🇺' },
+      { order: 10, name: 'Global - Max',          nameRu: 'Весь мир – Макс',         pattern: /global.*max/i,       icon: '🌍' },
     ];
 
     const categories = [];
@@ -74,6 +74,7 @@ class EsimGoAPI {
             regionNameRu: region.nameRu,
             regionIcon: region.icon,
             variantsCount: regionPackages.length,
+            _order: region.order || 999,
           });
         }
       } catch (err) {
@@ -81,8 +82,10 @@ class EsimGoAPI {
       }
     }
     
-    console.log('[eSIM-GO] Found', categories.length, 'regional categories from', packages.length, 'packages');
-    return categories;
+    // Сортируем по заданному порядку
+    const sorted = categories.sort((a, b) => (a._order || 999) - (b._order || 999));
+    console.log('[eSIM-GO] Found', sorted.length, 'regional categories from', packages.length, 'packages');
+    return sorted;
   }
 
   // Умная фильтрация: сперва приоритетные ограниченные пакеты, затем безлимит
