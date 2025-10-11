@@ -137,6 +137,11 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
               <DataIcon className="w-3.5 h-3.5" />
               {pkg.data}
             </span>
+            {Array.isArray(pkg.coverage) && pkg.coverage.length > 1 && (
+              <span className="text-xs text-text-secondary">
+                · {pkg.coverage.length} стран
+              </span>
+            )}
           </div>
         </div>
         

@@ -146,6 +146,18 @@ function CheckoutContent() {
                 <div className="text-xs text-text-secondary mt-0.5">С момента активации</div>
               </div>
             </div>
+
+            {Array.isArray(pkg.coverage) && pkg.coverage.length > 0 && (
+              <div className="flex justify-between items-start">
+                <span className="text-text-secondary">Покрытие:</span>
+                <button
+                  onClick={() => alert((pkg.coverage || []).join(', '))}
+                  className="text-right text-sm text-primary underline-offset-2 hover:underline"
+                >
+                  {pkg.coverage.length} стран(ы)
+                </button>
+              </div>
+            )}
             
             <div className="border-t border-gray-200 pt-3 mt-3">
               <div className="flex justify-between items-center text-lg">
