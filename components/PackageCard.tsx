@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { hapticFeedback } from '@/lib/telegram';
-import DataIcon from './icons/DataIcon';
 import ClockIcon from './icons/ClockIcon';
 import CoverageModal from './CoverageModal';
 
@@ -135,10 +134,7 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
             {getRegionName()}
           </h3>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-primary flex items-center gap-1">
-              <DataIcon className="w-3.5 h-3.5" />
-              {pkg.data}
-            </span>
+            <span className="text-sm font-semibold text-primary">{pkg.data}</span>
             {Array.isArray((pkg as any).regionCoverage) && (pkg as any).regionCoverage.length > 1 ? (
               <span className="text-xs text-text-secondary">· {(pkg as any).regionCoverage.length} стран</span>
             ) : Array.isArray(pkg.coverage) && pkg.coverage.length > 1 ? (
