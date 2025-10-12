@@ -312,7 +312,7 @@ function CheckoutContent() {
         isOpen={coverageOpen}
         onClose={() => setCoverageOpen(false)}
         coverage={(pkg as any).regionCoverage || pkg.coverage || []}
-        title="Страны + сети"
+        title="Страны покрытия"
       />
     </main>
   );

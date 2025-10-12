@@ -10,7 +10,7 @@ interface CoverageModalProps {
   title?: string;
 }
 
-export default function CoverageModal({ isOpen, onClose, coverage, title = 'Страны + сети' }: CoverageModalProps) {
+export default function CoverageModal({ isOpen, onClose, coverage, title = 'Страны покрытия' }: CoverageModalProps) {
   const list = useMemo(() => {
     const unique = Array.from(new Set((coverage || []).filter(Boolean)));
     return unique

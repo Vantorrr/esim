@@ -160,7 +160,7 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
                 onClick={() => setCoverageOpen(true)}
                 className="px-3 py-2 text-primary font-medium text-xs underline underline-offset-2"
               >
-                Страны + сети
+                Страны покрытия
               </button>
             ) : null}
             <button
