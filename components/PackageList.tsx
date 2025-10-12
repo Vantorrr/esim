@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { getPackages } from '@/lib/api';
 import PackageCard from './PackageCard';
 
@@ -25,6 +25,7 @@ export default function PackageList({ country }: PackageListProps) {
   const [packages, setPackages] = useState<Package[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [tab, setTab] = useState<'limited' | 'unlimited'>('limited');
 
   useEffect(() => {
     loadPackages();
@@ -45,6 +46,32 @@ export default function PackageList({ country }: PackageListProps) {
       setLoading(false);
     }
   };
+
+  // Разделяем на стандартные (ограниченные) и безлимитные
+  const { limited, unlimited } = useMemo(() => {
+    const isUnlimited = (p: Package) => /unlimited|безлимит/i.test(p.data || '');
+    const limitedList = packages.filter(p => !isUnlimited(p));
+    const unlimitedList = packages.filter(p => isUnlimited(p));
+    return { limited: limitedList, unlimited: unlimitedList };
+  }, [packages]);
+
+  // Группировка по дням с сортировкой по цене
+  const grouped = useMemo(() => {
+    const source = tab === 'limited' ? limited : unlimited;
+    const map = new Map<number, Package[]>();
+    for (const p of source) {
+      const v = Number(p.validity) || 0;
+      if (!map.has(v)) map.set(v, []);
+      map.get(v)!.push(p);
+    }
+    const order = tab === 'unlimited' ? [1, 3, 5, 7, 15, 30] : Array.from(map.keys()).sort((a, b) => a - b);
+    const result: { validity: number; items: Package[] }[] = [];
+    for (const v of order) {
+      const arr = (map.get(v) || []).slice().sort((a, b) => (a.priceRub ?? a.price) - (b.priceRub ?? b.price));
+      if (arr.length) result.push({ validity: v, items: arr });
+    }
+    return result;
+  }, [limited, unlimited, tab]);
 
   if (loading) {
     return (
@@ -118,12 +145,43 @@ export default function PackageList({ country }: PackageListProps) {
           {country ? '📱 Доступные тарифы' : '🌍 Долгосрочные пакеты'}
         </h2>
       </div>
-      
-      <div className="space-y-3">
-        {packages.map(pkg => (
-          <PackageCard key={pkg.id} package={pkg} />
-        ))}
-      </div>
+      {country && (
+        <div className="bg-white rounded-xl p-1 flex gap-1">
+          <button
+            onClick={() => setTab('limited')}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium ${tab==='limited' ? 'bg-primary/10 text-text-primary' : 'text-text-secondary'}`}
+          >
+            Стандартный
+          </button>
+          <button
+            onClick={() => setTab('unlimited')}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium ${tab==='unlimited' ? 'bg-primary/10 text-text-primary' : 'text-text-secondary'}`}
+          >
+            Безлимитный
+          </button>
+        </div>
+      )}
+
+      {country ? (
+        <div className="space-y-4">
+          {grouped.map(group => (
+            <div key={`v-${group.validity}`} className="space-y-2">
+              <div className="text-sm font-semibold text-text-secondary ml-1">
+                {group.validity} {group.validity === 1 ? 'день' : group.validity < 5 ? 'дня' : 'дней'}
+              </div>
+              {group.items.map(pkg => (
+                <PackageCard key={pkg.id} package={pkg} />
+              ))}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {packages.map(pkg => (
+            <PackageCard key={pkg.id} package={pkg} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
