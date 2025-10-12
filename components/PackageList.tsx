@@ -142,7 +142,7 @@ export default function PackageList({ country }: PackageListProps) {
           </svg>
         </div>
         <h2 className="text-2xl font-bold text-text-primary">
-          {country ? '📱 Доступные тарифы' : '🌍 Долгосрочные пакеты'}
+          {country ? '📱 Доступные тарифы' : '🌍 Региональные пакеты'}
         </h2>
       </div>
       {country && (
