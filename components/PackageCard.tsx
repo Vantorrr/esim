@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { hapticFeedback } from '@/lib/telegram';
 import DataIcon from './icons/DataIcon';
 import ClockIcon from './icons/ClockIcon';
+import CoverageModal from './CoverageModal';
 
 interface Package {
   id: string;
@@ -32,6 +33,7 @@ interface PackageCardProps {
 export default function PackageCard({ package: pkg }: PackageCardProps) {
   const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [coverageOpen, setCoverageOpen] = useState(false);
 
   const handleBuy = () => {
     hapticFeedback('medium');
@@ -156,14 +158,30 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
           <div className="text-2xl font-black text-text-primary">
             {priceInRub}₽
           </div>
-          <button
+          <div className="flex gap-2">
+            {(Array.isArray((pkg as any).regionCoverage) && (pkg as any).regionCoverage.length) || (Array.isArray(pkg.coverage) && pkg.coverage.length > 3) ? (
+              <button
+                onClick={() => setCoverageOpen(true)}
+                className="px-3 py-2 text-primary font-medium text-xs underline underline-offset-2"
+              >
+                Страны + сети
+              </button>
+            ) : null}
+            <button
             onClick={handleBuy}
             className="px-6 py-2 bg-gradient-primary text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all shadow-md active:scale-95 whitespace-nowrap"
           >
             {pkg.isRegionalCategory ? 'Выбрать' : 'Купить'}
           </button>
+          </div>
         </div>
       </div>
+      <CoverageModal
+        isOpen={coverageOpen}
+        onClose={() => setCoverageOpen(false)}
+        coverage={(pkg as any).regionCoverage || pkg.coverage || []}
+        title="Страны + сети"
+      />
     </div>
   );
 }

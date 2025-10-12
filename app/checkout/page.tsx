@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { getPackageDetails, createStripeSession, createYooKassaPayment, createTinkoffPayment } from '@/lib/api';
 import { hapticFeedback, showBackButton, hideBackButton } from '@/lib/telegram';
 import LoadingScreen from '@/components/LoadingScreen';
+import CoverageModal from '@/components/CoverageModal';
 
 function CheckoutContent() {
   const router = useRouter();
@@ -15,6 +16,7 @@ function CheckoutContent() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'yookassa' | 'tinkoff'>('tinkoff');
+  const [coverageOpen, setCoverageOpen] = useState(false);
 
   useEffect(() => {
     if (!packageId) {
@@ -150,20 +152,14 @@ function CheckoutContent() {
             {Array.isArray((pkg as any).regionCoverage) && (pkg as any).regionCoverage.length > 0 ? (
               <div className="flex justify-between items-start">
                 <span className="text-text-secondary">Покрытие:</span>
-                <button
-                  onClick={() => alert(((pkg as any).regionCoverage || []).join(', '))}
-                  className="text-right text-sm text-primary underline-offset-2 hover:underline"
-                >
+                <button onClick={() => setCoverageOpen(true)} className="text-right text-sm text-primary underline-offset-2 hover:underline">
                   {(pkg as any).regionCoverage.length} стран(ы)
                 </button>
               </div>
             ) : Array.isArray(pkg.coverage) && pkg.coverage.length > 0 && (
               <div className="flex justify-between items-start">
                 <span className="text-text-secondary">Покрытие:</span>
-                <button
-                  onClick={() => alert((pkg.coverage || []).join(', '))}
-                  className="text-right text-sm text-primary underline-offset-2 hover:underline"
-                >
+                <button onClick={() => setCoverageOpen(true)} className="text-right text-sm text-primary underline-offset-2 hover:underline">
                   {pkg.coverage.length} стран(ы)
                 </button>
               </div>
@@ -312,6 +308,12 @@ function CheckoutContent() {
           </button>
         </div>
       </div>
+      <CoverageModal
+        isOpen={coverageOpen}
+        onClose={() => setCoverageOpen(false)}
+        coverage={(pkg as any).regionCoverage || pkg.coverage || []}
+        title="Страны + сети"
+      />
     </main>
   );
 }
