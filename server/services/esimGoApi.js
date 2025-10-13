@@ -1,5 +1,6 @@
 const axios = require('axios');
 const cacheRepo = require('./cacheRepo');
+const { getStaticCoverageByName } = require('./staticCoverage');
 
 class EsimGoAPI {
   constructor() {
@@ -118,7 +119,16 @@ class EsimGoAPI {
             }
           }
           
-          const finalCoverage = Array.from(coverageSet);
+          let finalCoverage = Array.from(coverageSet);
+          // Если покрытие пустое или содержит не-ISO (длинные строки), подставим статический список
+          const looksBad = finalCoverage.length === 0 || (finalCoverage[0] && finalCoverage[0].length > 3);
+          if (looksBad) {
+            const staticList = getStaticCoverageByName(region.name) || getStaticCoverageByName(region.nameRu);
+            if (staticList && staticList.length) {
+              finalCoverage = staticList;
+              console.log(`[eSIM-GO] Using static coverage for "${region.nameRu}":`, finalCoverage.length);
+            }
+          }
           console.log(`[eSIM-GO] Region "${region.nameRu}": ${regionPackages.length} packages → ${finalCoverage.length} countries`);
           
           categories.push({
