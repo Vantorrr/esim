@@ -3,13 +3,16 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import PrivacyModal from './PrivacyModal';
+import OfferModal from './OfferModal';
 
 export default function Footer() {
   const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [offerOpen, setOfferOpen] = useState(false);
 
   return (
     <>
       <PrivacyModal isOpen={privacyOpen} onClose={() => setPrivacyOpen(false)} />
+      <OfferModal isOpen={offerOpen} onClose={() => setOfferOpen(false)} />
     <footer className="bg-white border-t border-primary/10 mt-12">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Quick Links */}
@@ -127,9 +130,12 @@ export default function Footer() {
               Политика конфиденциальности
             </button>
             <span className="text-text-secondary/50">•</span>
-            <Link href="/terms" className="text-primary hover:underline underline-offset-2 font-medium transition-colors">
-              Пользовательское соглашение
-            </Link>
+            <button
+              onClick={() => setOfferOpen(true)}
+              className="text-primary hover:underline underline-offset-2 font-medium transition-colors"
+            >
+              Публичная оферта
+            </button>
           </div>
           <p className="mt-2">Сделано с ❤️ для путешественников</p>
         </div>
