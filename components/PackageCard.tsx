@@ -139,53 +139,56 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
 
   return (
     <div className="bg-white rounded-2xl p-4 shadow-md hover:shadow-lg transition-all animate-fade-in border border-gray-100">
-      <div className="flex items-center gap-4">
+      <div className="flex items-start gap-3">
         {/* Icon/Flag */}
         <div className="w-12 h-12 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl flex items-center justify-center text-3xl flex-shrink-0">
           {getRegionIcon()}
         </div>
         
-        {/* Region Name + Data */}
-        <div className="flex-1 min-w-[50%]">
-          <h3 className="text-base font-bold text-text-primary mb-1 leading-tight whitespace-normal break-words">
-            {getRegionName()}
-          </h3>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-primary whitespace-nowrap">{pkg.data}</span>
-            {Array.isArray((pkg as any).regionCoverage) && (pkg as any).regionCoverage.length > 1 ? (
-              <span className="text-xs text-text-secondary whitespace-nowrap">· {(pkg as any).regionCoverage.length} стран</span>
-            ) : Array.isArray(pkg.coverage) && pkg.coverage.length > 1 ? (
-              <span className="text-xs text-text-secondary whitespace-nowrap">
-                · {pkg.coverage.length} стран
-              </span>
-            ) : null}
+        {/* Region Name + Data + Details */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-base font-bold text-text-primary mb-1 leading-snug">
+                {getRegionName()}
+              </h3>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-semibold text-primary whitespace-nowrap">{pkg.data}</span>
+                {Array.isArray((pkg as any).regionCoverage) && (pkg as any).regionCoverage.length > 1 ? (
+                  <span className="text-xs text-text-secondary whitespace-nowrap">· {(pkg as any).regionCoverage.length} стран</span>
+                ) : Array.isArray(pkg.coverage) && pkg.coverage.length > 1 ? (
+                  <span className="text-xs text-text-secondary whitespace-nowrap">
+                    · {pkg.coverage.length} стран
+                  </span>
+                ) : null}
+              </div>
+            </div>
+            <div className="text-xs font-medium text-secondary flex items-center gap-1 whitespace-nowrap">
+              <ClockIcon className="w-3.5 h-3.5" />
+              {pkg.validity} {pkg.validity === 1 ? 'день' : pkg.validity < 5 ? 'дня' : 'дней'}
+            </div>
           </div>
-        </div>
-        
-        {/* Days + Price + Button */}
-        <div className="flex flex-col items-end gap-2 flex-shrink-0">
-          <div className="text-xs font-medium text-secondary flex items-center gap-1">
-            <ClockIcon className="w-3.5 h-3.5" />
-            {pkg.validity} {pkg.validity === 1 ? 'день' : pkg.validity < 5 ? 'дня' : 'дней'}
-          </div>
-          <div className="text-2xl font-black text-text-primary">
-            {priceInRub}₽
-          </div>
-          <div className="flex gap-2">
-            {(Array.isArray((pkg as any).regionCoverage) && (pkg as any).regionCoverage.length) || (Array.isArray(pkg.coverage) && pkg.coverage.length > 3) ? (
+          
+          <div className="flex items-center justify-between gap-3 mt-2">
+            <div className="text-2xl font-black text-text-primary whitespace-nowrap">
+              {priceInRub}₽
+            </div>
+            <div className="flex items-center gap-2">
+              {(Array.isArray((pkg as any).regionCoverage) && (pkg as any).regionCoverage.length) || (Array.isArray(pkg.coverage) && pkg.coverage.length > 3) ? (
+                <button
+                  onClick={() => setCoverageOpen(true)}
+                  className="text-primary font-medium text-xs underline underline-offset-2 whitespace-nowrap"
+                >
+                  Страны покрытия
+                </button>
+              ) : null}
               <button
-                onClick={() => setCoverageOpen(true)}
-                className="px-3 py-2 text-primary font-medium text-xs underline underline-offset-2"
+                onClick={handleBuy}
+                className="px-6 py-2 bg-gradient-primary text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all shadow-md active:scale-95 whitespace-nowrap"
               >
-                Страны покрытия
+                {pkg.isRegionalCategory ? 'Выбрать' : 'Купить'}
               </button>
-            ) : null}
-            <button
-            onClick={handleBuy}
-            className="px-6 py-2 bg-gradient-primary text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all shadow-md active:scale-95 whitespace-nowrap"
-          >
-            {pkg.isRegionalCategory ? 'Выбрать' : 'Купить'}
-          </button>
+            </div>
           </div>
         </div>
       </div>
