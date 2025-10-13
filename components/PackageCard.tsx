@@ -88,29 +88,16 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
       if (Icon) return <Icon className="w-8 h-8" />;
     }
 
-    // Premium badge (default for regional categories)
+    // Emoji for regional category (default)
     if (pkg.isRegionalCategory) {
       const name = (pkg.regionName || pkg.name || '').toLowerCase();
-      const code = /global/.test(name)
-        ? 'GL'
-        : /europe.*usa/.test(name)
-        ? 'EU+US'
-        : /europe/.test(name)
-        ? 'EU'
-        : /asia/.test(name)
-        ? 'AS'
-        : /america/.test(name)
-        ? 'AM'
-        : /africa/.test(name)
-        ? 'AF'
-        : /middle\s*east/.test(name)
-        ? 'ME'
-        : 'RG';
-      return (
-        <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 text-primary font-extrabold text-xs shadow-inner">
-          {code}
-        </span>
-      );
+      if (/global/.test(name)) return '🌍';
+      if (/europe/.test(name)) return '🇪🇺';
+      if (/asia/.test(name)) return '🌏';
+      if (/america/.test(name)) return '🌎';
+      if (/africa/.test(name)) return '🌍';
+      if (/middle\s*east/.test(name)) return '🕌';
+      return '🌐';
     }
 
     // Emoji for country
@@ -160,7 +147,7 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
         
         {/* Region Name + Data */}
         <div className="flex-1 min-w-0">
-          <h3 className="text-base font-bold text-text-primary mb-1 leading-tight truncate">
+          <h3 className="text-base font-bold text-text-primary mb-1 leading-tight whitespace-normal break-words">
             {getRegionName()}
           </h3>
           <div className="flex items-center gap-2">
