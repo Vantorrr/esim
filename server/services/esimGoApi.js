@@ -120,7 +120,8 @@ class EsimGoAPI {
   }
 
   // Умная фильтрация: сперва приоритетные ограниченные пакеты, затем безлимит
-  smartFilter(packages, limit = 10) {
+  smartFilter(packages, opts = {}) {
+    const { limit = 10, reserveUnlimited = true, maxUnlimited = 6 } = opts;
     // Помощники
     const parseDataToMb = (dataStr) => {
       if (!dataStr) return 0;
@@ -173,6 +174,15 @@ class EsimGoAPI {
         if (ai !== bi) return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
         return a.price - b.price;
       });
+
+    // Гарантируем присутствие безлимитов в выдаче
+    if (reserveUnlimited && unlimitedSorted.length > 0) {
+      const reserved = Math.min(unlimitedSorted.length, maxUnlimited, limit);
+      const limitedCap = Math.max(0, limit - reserved);
+      const firstLimited = limitedSorted.slice(0, limitedCap);
+      const firstUnlimited = unlimitedSorted.slice(0, reserved);
+      return [...firstLimited, ...firstUnlimited];
+    }
 
     const result = [...limitedSorted, ...unlimitedSorted];
     return result.slice(0, limit);
@@ -471,7 +481,7 @@ class EsimGoAPI {
     console.log('[eSIM-GO] After deduplication:', uniquePackages.length, 'unique packages');
     
     // Сортируем по приоритету (GB и дни)
-    const sorted = this.smartFilter(uniquePackages, 50);
+    const sorted = this.smartFilter(uniquePackages, { limit: 50, reserveUnlimited: true, maxUnlimited: 10 });
     console.log('[eSIM-GO] After smart filter:', sorted.length, 'packages');
     
     return { esims: sorted };
@@ -511,7 +521,7 @@ class EsimGoAPI {
       const deduped = Array.from(uniqueMap.values());
       
       // Применяем умную фильтрацию: топ-10 по приоритету
-      const smartFiltered = this.smartFilter(deduped, 10);
+      const smartFiltered = this.smartFilter(deduped, { limit: 10, reserveUnlimited: true, maxUnlimited: 6 });
       console.log('[eSIM-GO] smart filtered to', smartFiltered.length, 'packages');
       return { esims: smartFiltered };
     }
@@ -533,7 +543,7 @@ class EsimGoAPI {
         }
       }
       packages = Array.from(uniqueMap.values());
-      return { esims: this.smartFilter(packages, 10) };
+      return { esims: this.smartFilter(packages, { limit: 10, reserveUnlimited: true, maxUnlimited: 6 }) };
     }
     
     // Фоллбек: если кэш ещё не загружен, используем старую логику (первые 50)
