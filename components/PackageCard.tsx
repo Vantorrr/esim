@@ -147,7 +147,7 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
         
         {/* Region Name + Data */}
         <div className="flex-1 min-w-0">
-          <h3 className="text-base font-bold text-text-primary mb-1 leading-tight whitespace-normal break-words">
+          <h3 className="text-base font-bold text-text-primary mb-1 leading-tight truncate whitespace-nowrap">
             {getRegionName()}
           </h3>
           <div className="flex items-center gap-2">
