@@ -40,16 +40,22 @@ class EsimGoAPI {
 
   async restoreFromSnapshot() {
     try {
-      // TEMPORARY: skip snapshot to rebuild cache with correct coverage
-      if (process.env.FORCE_CACHE_REBUILD === 'true') {
-        console.log('[eSIM-GO] FORCE_CACHE_REBUILD=true, skipping snapshot restore');
-        return;
-      }
-      
       const snap = await cacheRepo.getSnapshot('catalogue_v2_5');
       if (snap && Array.isArray(snap.data) && snap.data.length > 0) {
-        this.allPackagesCache = snap.data;
-        this.cacheTimestamp = snap.updatedAt?.getTime?.() || Date.now();
+        // Проверяем, правильный ли формат coverage (должны быть ISO-коды, а не названия)
+        const samplePkg = snap.data.find(p => p.coverage && p.coverage.length > 0);
+        const hasBadCoverage = samplePkg && samplePkg.coverage[0]?.length > 3; // если > 3 символов — это не ISO
+        
+        if (hasBadCoverage) {
+          console.log('[eSIM-GO] Old snapshot format detected, will rebuild on next refresh cycle');
+          // Используем старый кэш временно, но сразу запустим обновление
+          this.allPackagesCache = snap.data;
+          this.cacheTimestamp = 0; // force immediate refresh
+        } else {
+          this.allPackagesCache = snap.data;
+          this.cacheTimestamp = snap.updatedAt?.getTime?.() || Date.now();
+        }
+        
         // Для главной — региональные категории из кэша
         const regionalCategories = this.getRegionalCategories(this.allPackagesCache);
         this.topPackagesCache = regionalCategories.length > 0 ? regionalCategories : this.allPackagesCache.slice(0, 10);
