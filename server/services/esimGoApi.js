@@ -92,10 +92,15 @@ class EsimGoAPI {
           // Собираем агрегированное покрытие региона (уникальные ISO)
           const coverageSet = new Set();
           for (const rp of regionPackages) {
-            if (Array.isArray(rp.coverage)) {
-              for (const iso of rp.coverage) coverageSet.add(iso);
+            if (Array.isArray(rp.coverage) && rp.coverage.length > 0) {
+              for (const iso of rp.coverage) {
+                if (iso && typeof iso === 'string') coverageSet.add(iso);
+              }
             }
           }
+          
+          const finalCoverage = Array.from(coverageSet);
+          console.log(`[eSIM-GO] Region "${region.nameRu}": ${regionPackages.length} packages → ${finalCoverage.length} countries`);
           
           categories.push({
             ...representative,
@@ -105,7 +110,7 @@ class EsimGoAPI {
             regionIcon: region.icon,
             variantsCount: regionPackages.length,
             _order: region.order || 999,
-            regionCoverage: Array.from(coverageSet),
+            regionCoverage: finalCoverage,
           });
         }
       } catch (err) {
