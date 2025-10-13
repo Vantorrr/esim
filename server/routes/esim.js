@@ -44,6 +44,8 @@ router.get('/packages', async (req, res) => {
       }));
     }
     
+    // Короткое кэширование ответов (можно править через переменные окружения)
+    res.set('Cache-Control', 'public, max-age=15, s-maxage=60, stale-while-revalidate=120');
     res.json(packages);
   } catch (error) {
     res.status(500).json({ error: error.message });

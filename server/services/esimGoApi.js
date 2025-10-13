@@ -1,4 +1,5 @@
 const axios = require('axios');
+const cacheRepo = require('./cacheRepo');
 
 class EsimGoAPI {
   constructor() {
@@ -27,10 +28,32 @@ class EsimGoAPI {
     this.topPackagesCache = null; // топ-10 для главной
     this.cacheTimestamp = null;
     this.cacheLifetime = 30 * 60 * 1000; // 30 минут
-    // Запускаем загрузку топ-10 сразу, остальное — в фоне (async, не блокирует конструктор)
-    this.refreshCache().catch(err => {
-      console.error('[eSIM-GO] Initial cache load failed:', err.message);
+
+    // Попробуем поднять кэш из БД мгновенно
+    this.restoreFromSnapshot().finally(() => {
+      // Запускаем обновление в фоне (не блокирует запуск)
+      this.refreshCache().catch(err => {
+        console.error('[eSIM-GO] Initial cache load failed:', err.message);
+      });
     });
+  }
+
+  async restoreFromSnapshot() {
+    try {
+      const snap = await cacheRepo.getSnapshot('catalogue_v2_5');
+      if (snap && Array.isArray(snap.data) && snap.data.length > 0) {
+        this.allPackagesCache = snap.data;
+        this.cacheTimestamp = snap.updatedAt?.getTime?.() || Date.now();
+        // Для главной — региональные категории из кэша
+        const regionalCategories = this.getRegionalCategories(this.allPackagesCache);
+        this.topPackagesCache = regionalCategories.length > 0 ? regionalCategories : this.allPackagesCache.slice(0, 10);
+        console.log('[eSIM-GO] Restored cache from DB snapshot:', this.allPackagesCache.length, 'packages');
+      } else {
+        console.log('[eSIM-GO] No DB snapshot found');
+      }
+    } catch (err) {
+      console.warn('[eSIM-GO] restoreFromSnapshot failed:', err.message);
+    }
   }
 
   // Получаем региональные категории (по одному представителю каждого региона)
@@ -218,8 +241,12 @@ class EsimGoAPI {
       
       // Первая страница как начальный кэш
       const firstPageMapped = (firstPage.bundles || []).map(mapBundle);
-      this.allPackagesCache = firstPageMapped;
-      this.topPackagesCache = firstPageMapped.slice(0, 10);
+      if (!this.allPackagesCache || (this.allPackagesCache && this.allPackagesCache.length === 0)) {
+        this.allPackagesCache = firstPageMapped;
+      }
+      if (!this.topPackagesCache || this.topPackagesCache.length === 0) {
+        this.topPackagesCache = firstPageMapped.slice(0, 10);
+      }
       console.log('[eSIM-GO] Initial cache ready:', this.topPackagesCache.length, 'packages');
       
       // Загружаем остальные страницы МЕДЛЕННО в фоне (по 1 странице каждые 500ms)
@@ -245,6 +272,11 @@ class EsimGoAPI {
           this.allPackagesCache = Array.from(uniqueMap.values());
           this.cacheTimestamp = Date.now();
           console.log('[eSIM-GO] Full cache completed:', allMapped.length, '→', this.allPackagesCache.length, 'unique packages');
+          
+          // Сохраняем снапшот в БД для мгновенного старта при следующих рестартах
+          cacheRepo.saveSnapshot('catalogue_v2_5', this.allPackagesCache).then((ok) => {
+            if (ok) console.log('[eSIM-GO] Snapshot saved to DB');
+          });
           
           // Формируем региональные категории из ПОЛНОГО кэша
           const regionalCategories = this.getRegionalCategories(this.allPackagesCache);
