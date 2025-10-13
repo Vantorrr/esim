@@ -130,7 +130,7 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
         
         {/* Region Name + Data */}
         <div className="flex-1 min-w-0">
-          <h3 className="text-base font-bold text-text-primary mb-1 truncate">
+          <h3 className="text-base font-bold text-text-primary mb-1 leading-tight whitespace-normal break-words">
             {getRegionName()}
           </h3>
           <div className="flex items-center gap-2">
@@ -176,7 +176,7 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
         isOpen={coverageOpen}
         onClose={() => setCoverageOpen(false)}
         coverage={(pkg as any).regionCoverage || pkg.coverage || []}
-        title="Страны + сети"
+        title="Страны покрытия"
       />
     </div>
   );
