@@ -88,33 +88,32 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
       if (Icon) return <Icon className="w-8 h-8" />;
     }
 
-    // Emoji (default)
+    // Premium badge (default for regional categories)
     if (pkg.isRegionalCategory) {
       const name = (pkg.regionName || pkg.name || '').toLowerCase();
-      if (/global/.test(name)) return '🌍';
-      if (/europe/.test(name)) return '🇪🇺';
-      if (/asia/.test(name)) return '🌏';
-      if (/america/.test(name)) return '🌎';
-      if (/africa/.test(name)) return '🌍';
-      if (/middle\s*east/.test(name)) return '🕌';
-      return '🌐';
+      const code = /global/.test(name)
+        ? 'GL'
+        : /europe.*usa/.test(name)
+        ? 'EU+US'
+        : /europe/.test(name)
+        ? 'EU'
+        : /asia/.test(name)
+        ? 'AS'
+        : /america/.test(name)
+        ? 'AM'
+        : /africa/.test(name)
+        ? 'AF'
+        : /middle\s*east/.test(name)
+        ? 'ME'
+        : 'RG';
+      return (
+        <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 text-primary font-extrabold text-xs shadow-inner">
+          {code}
+        </span>
+      );
     }
-    
-    const name = pkg.name?.toLowerCase() || '';
-    const isRegional = Array.isArray(pkg.coverage) && pkg.coverage.length > 3;
-    
-    // Определяем регион по названию
-    if (/global/i.test(name)) return '🌍';
-    if (/europe/i.test(name)) return '🇪🇺';
-    if (/asia/i.test(name)) return '🌏';
-    if (/america/i.test(name)) return '🌎';
-    if (/africa/i.test(name)) return '🌍';
-    if (/middle\s*east/i.test(name)) return '🕌';
-    
-    // Если региональный, но не определили — глобус
-    if (isRegional) return '🌐';
-    
-    // Обычный пакет — флаг страны
+
+    // Emoji for country
     if (!pkg.country || pkg.country.length !== 2) return '🏳️';
     const codePoints = pkg.country.toUpperCase().split('').map(c => 0x1F1E6 - 65 + c.charCodeAt(0));
     return String.fromCodePoint(...codePoints);
@@ -161,15 +160,15 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
         
         {/* Region Name + Data */}
         <div className="flex-1 min-w-0">
-          <h3 className="text-base font-bold text-text-primary mb-1 leading-tight whitespace-normal break-words">
+          <h3 className="text-base font-bold text-text-primary mb-1 leading-tight truncate">
             {getRegionName()}
           </h3>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-primary">{pkg.data}</span>
+            <span className="text-sm font-semibold text-primary whitespace-nowrap">{pkg.data}</span>
             {Array.isArray((pkg as any).regionCoverage) && (pkg as any).regionCoverage.length > 1 ? (
-              <span className="text-xs text-text-secondary">· {(pkg as any).regionCoverage.length} стран</span>
+              <span className="text-xs text-text-secondary whitespace-nowrap">· {(pkg as any).regionCoverage.length} стран</span>
             ) : Array.isArray(pkg.coverage) && pkg.coverage.length > 1 ? (
-              <span className="text-xs text-text-secondary">
+              <span className="text-xs text-text-secondary whitespace-nowrap">
                 · {pkg.coverage.length} стран
               </span>
             ) : null}
