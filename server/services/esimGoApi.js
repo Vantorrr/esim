@@ -468,14 +468,23 @@ class EsimGoAPI {
     const regionPackages = this.allPackagesCache.filter(p => p && p.name && pattern.test(p.name));
     console.log('[eSIM-GO] Found', regionPackages.length, 'packages matching pattern for', regionSlug);
     
-    // Убираем дубликаты (одинаковый data + validity, но разные группы) — оставляем самый дешёвый
+    // Убираем дубликаты (одинаковый data + validity, но разные группы) — оставляем самый предпочтительный
     const uniqueMap = new Map();
+    const prefer = (a, b) => {
+      const aUnlimited = /unlimited|безлимит/i.test((a.data || '') + ' ' + (a.name || ''));
+      const bUnlimited = /unlimited|безлимит/i.test((b.data || '') + ' ' + (b.name || ''));
+      if (aUnlimited || bUnlimited) {
+        const aStd = /standard|стандарт/i.test(a.name || '');
+        const bStd = /standard|стандарт/i.test(b.name || '');
+        if (aStd !== bStd) return aStd ? a : b; // предпочитаем Standard
+      }
+      return (a.price <= b.price) ? a : b; // иначе дешевле
+    };
     for (const pkg of regionPackages) {
       const key = `${pkg.data}_${pkg.validity}`;
       const existing = uniqueMap.get(key);
-      if (!existing || pkg.price < existing.price) {
-        uniqueMap.set(key, pkg);
-      }
+      if (!existing) uniqueMap.set(key, pkg);
+      else uniqueMap.set(key, prefer(existing, pkg));
     }
     const uniquePackages = Array.from(uniqueMap.values());
     console.log('[eSIM-GO] After deduplication:', uniquePackages.length, 'unique packages');
@@ -509,14 +518,23 @@ class EsimGoAPI {
       );
       console.log('[eSIM-GO] filtered to', packages.length, 'packages for', countryCode);
       
-      // Дедупликаты по (data + validity) — оставляем самый дешёвый
+      // Дедупликаты по (data + validity) — оставляем предпочтительный вариант (Unlimited → Standard)
       const uniqueMap = new Map();
+      const prefer = (a, b) => {
+        const aUnlimited = /unlimited|безлимит/i.test((a.data || '') + ' ' + (a.name || ''));
+        const bUnlimited = /unlimited|безлимит/i.test((b.data || '') + ' ' + (b.name || ''));
+        if (aUnlimited || bUnlimited) {
+          const aStd = /standard|стандарт/i.test(a.name || '');
+          const bStd = /standard|стандарт/i.test(b.name || '');
+          if (aStd !== bStd) return aStd ? a : b;
+        }
+        return (a.price <= b.price) ? a : b;
+      };
       for (const pkg of packages) {
         const key = `${pkg.data}_${pkg.validity}`;
         const existing = uniqueMap.get(key);
-        if (!existing || pkg.price < existing.price) {
-          uniqueMap.set(key, pkg);
-        }
+        if (!existing) uniqueMap.set(key, pkg);
+        else uniqueMap.set(key, prefer(existing, pkg));
       }
       const deduped = Array.from(uniqueMap.values());
       
