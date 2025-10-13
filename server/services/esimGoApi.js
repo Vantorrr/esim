@@ -40,6 +40,12 @@ class EsimGoAPI {
 
   async restoreFromSnapshot() {
     try {
+      // TEMPORARY: skip snapshot to rebuild cache with correct coverage
+      if (process.env.FORCE_CACHE_REBUILD === 'true') {
+        console.log('[eSIM-GO] FORCE_CACHE_REBUILD=true, skipping snapshot restore');
+        return;
+      }
+      
       const snap = await cacheRepo.getSnapshot('catalogue_v2_5');
       if (snap && Array.isArray(snap.data) && snap.data.length > 0) {
         this.allPackagesCache = snap.data;
@@ -258,6 +264,12 @@ class EsimGoAPI {
           }
         }
         
+        // Правильно извлекаем coverage: если есть countries с iso — берём их, иначе []
+        let coverageList = [];
+        if (Array.isArray(p.countries) && p.countries.length > 0 && p.countries[0]?.iso) {
+          coverageList = p.countries.map(c => c.iso).filter(Boolean);
+        }
+        
         return {
           id: p.name || p.id || p.packageId || p.code,
           name: p.description || p.title || p.name,
@@ -265,7 +277,7 @@ class EsimGoAPI {
           validity: p.duration || p.validity || p.days,
           country: countryIso,
           countryName: countryName,
-          coverage: p.countries?.map(c => c.iso) || p.coverage || [],
+          coverage: coverageList,
           originalPrice: p.price || p.amount || p.cost,
           price: parseFloat(((p.price || p.amount || p.cost) * this.marginMultiplier).toFixed(2)),
         };
