@@ -1,9 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
+import PrivacyModal from './PrivacyModal';
 
 export default function Footer() {
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+
   return (
+    <>
+      <PrivacyModal isOpen={privacyOpen} onClose={() => setPrivacyOpen(false)} />
     <footer className="bg-white border-t border-primary/10 mt-12">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Quick Links */}
@@ -111,12 +117,25 @@ export default function Footer() {
         </div>
 
         {/* Copyright */}
-        <div className="text-center text-sm text-text-secondary">
+        <div className="text-center text-sm text-text-secondary space-y-2">
           <p>© 2025 eWave. Все права защищены.</p>
-          <p className="mt-1">Сделано с ❤️ для путешественников</p>
+          <div className="flex items-center justify-center gap-4">
+            <button
+              onClick={() => setPrivacyOpen(true)}
+              className="text-primary hover:underline underline-offset-2 font-medium transition-colors"
+            >
+              Политика конфиденциальности
+            </button>
+            <span className="text-text-secondary/50">•</span>
+            <Link href="/terms" className="text-primary hover:underline underline-offset-2 font-medium transition-colors">
+              Пользовательское соглашение
+            </Link>
+          </div>
+          <p className="mt-2">Сделано с ❤️ для путешественников</p>
         </div>
       </div>
     </footer>
+    </>
   );
 }
 
