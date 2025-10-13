@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { hapticFeedback } from '@/lib/telegram';
 import ClockIcon from './icons/ClockIcon';
 import CoverageModal from './CoverageModal';
+import RegionIconMap from './icons/regions/Regions';
 
 interface Package {
   id: string;
@@ -64,9 +65,25 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
 
   // Получаем флаг/иконку для региона или страны
   const getRegionIcon = () => {
-    // Если это региональная категория — используем её иконку
-    if (pkg.isRegionalCategory && pkg.regionIcon) {
-      return pkg.regionIcon;
+    // Если это региональная категория — используем SVG-иконку
+    if (pkg.isRegionalCategory && pkg.regionName) {
+      const key = pkg.regionName.toLowerCase();
+      const mapKey =
+        /global.*light/.test(key) || /global.*standard/.test(key) || /global.*max/.test(key) || /global/.test(key)
+          ? 'global'
+          : /europe/.test(key)
+          ? 'europe'
+          : /asia/.test(key)
+          ? 'asia'
+          : /america/.test(key)
+          ? 'americas'
+          : /africa/.test(key)
+          ? 'africa'
+          : /middle\s*east/.test(key)
+          ? 'middle-east'
+          : '';
+      const Icon = (RegionIconMap as any)[mapKey];
+      if (Icon) return <Icon className="w-8 h-8" />;
     }
     
     const name = pkg.name?.toLowerCase() || '';
