@@ -65,7 +65,7 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
 
   // Получаем флаг/иконку для региона или страны
   const getRegionIcon = () => {
-    const iconStyle = process.env.NEXT_PUBLIC_REGION_ICONS || 'emoji';
+    const iconStyle = process.env.NEXT_PUBLIC_REGION_ICONS || 'svg';
 
     // SVG variant behind flag
     if (iconStyle === 'svg' && pkg.isRegionalCategory && pkg.regionName) {

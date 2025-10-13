@@ -22,10 +22,21 @@ export const GlobalIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 export const EuropeIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <Badge {...props} color="#3F8CFF">
-    {/* Europe-like blob */}
-    <path d="M22 40c-3-3-2-7 1-9 3-2 5-1 7-3 2-1 2-4 5-5 3-1 6 1 7 3 2 3 1 6-1 8-2 2-4 2-6 4-3 2-7 5-13 2z" fill="#fff" opacity="0.9"/>
-  </Badge>
+  <svg viewBox="0 0 64 64" {...props}>
+    <defs>
+      <linearGradient id="rg-eu" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#3F8CFF" />
+        <stop offset="100%" stopColor="#7AE1FF" />
+      </linearGradient>
+    </defs>
+    <circle cx="32" cy="32" r="28" fill="url(#rg-eu)"/>
+    {/* Europe map silhouette based on reference */}
+    <g transform="translate(12, 8) scale(0.65)" fill="#fff" opacity="0.95">
+      <path d="M10 25c-2-1-2-3 0-4l3-2 2-4 4-3 6-1 4 2 3 4-1 3 3 2 2-1 3 1 2 3-1 3 2 2 4 1 3 3 1 4-2 3-4 1-3-1-2 2-4-1-3 2-5-2-4-3-2-4-3-2-4 0-3-2z"/>
+      <path d="M42 10l3 2 2 3 0 3-2 2-3 0-2-2 0-3 2-3z" opacity="0.8"/>
+      <path d="M8 35l-2 3-1 3 1 2 3 1 2-1 1-3-1-3-3-2z" opacity="0.7"/>
+    </g>
+  </svg>
 );
 
 export const AsiaIcon = (props: React.SVGProps<SVGSVGElement>) => (
