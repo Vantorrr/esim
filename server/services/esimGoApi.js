@@ -63,6 +63,8 @@ class EsimGoAPI {
       return [];
     }
     
+    console.log('[eSIM-GO] getRegionalCategories called with', packages.length, 'packages');
+    
     // Региональные пакеты с заданным порядком показа (чтобы Global не шли подряд)
     const regions = [
       { order: 1,  name: 'Global - Light',        nameRu: 'Весь мир – Лайт',        pattern: /global.*light/i,     icon: '🌍' },
@@ -83,6 +85,11 @@ class EsimGoAPI {
       try {
         // Ищем по паттерну в названии (description)
         const regionPackages = packages.filter(p => p && p.name && region.pattern.test(p.name));
+        
+        console.log(`[eSIM-GO] Checking region "${region.nameRu}": found ${regionPackages.length} packages`);
+        if (regionPackages.length > 0 && regionPackages[0].coverage) {
+          console.log(`[eSIM-GO] Sample coverage for "${region.nameRu}":`, regionPackages[0].coverage?.slice(0, 5), `(${regionPackages[0].coverage?.length} total)`);
+        }
         
         if (regionPackages.length > 0) {
           // Предпочитаем НЕ безлимитные пакеты как представителя
