@@ -645,20 +645,20 @@ class EsimGoAPI {
     try {
       console.log('[eSIM-GO] getPackageDetails: looking for', packageId);
       
-      // Сначала ищем в полном кэше (если загружен)
-      if (this.allPackagesCache) {
-        const found = this.allPackagesCache.find(p => p.id === packageId);
+      // Сначала ищем в топ-кэше (там лежат региональные категории с полным regionCoverage)
+      if (this.topPackagesCache) {
+        const found = this.topPackagesCache.find(p => p.id === packageId);
         if (found) {
-          console.log('[eSIM-GO] found in full cache:', found.name);
+          console.log('[eSIM-GO] found in top cache (regional):', found.name, '| regionCoverage:', found.regionCoverage?.length);
           return found;
         }
       }
       
-      // Если нет в кэше — ищем в топ-10
-      if (this.topPackagesCache) {
-        const found = this.topPackagesCache.find(p => p.id === packageId);
+      // Потом в полном кэше (обычные пакеты)
+      if (this.allPackagesCache) {
+        const found = this.allPackagesCache.find(p => p.id === packageId);
         if (found) {
-          console.log('[eSIM-GO] found in top cache:', found.name);
+          console.log('[eSIM-GO] found in full cache:', found.name);
           return found;
         }
       }
