@@ -218,6 +218,16 @@ class EsimGoAPI {
         const countryIso = p.countries?.[0]?.iso || p.country || p.countryCode;
         const countryName = p.countries?.[0]?.name || p.name;
         
+        // DEBUG: проверяем структуру countries для первого глобального пакета
+        if (p.description && /global.*light/i.test(p.description) && !this._loggedGlobalSample) {
+          console.log('[eSIM-GO] Sample Global-Light bundle:', {
+            description: p.description,
+            countries: p.countries,
+            coverage: p.coverage,
+          });
+          this._loggedGlobalSample = true;
+        }
+        
         // Конвертируем MB в GB для удобства отображения
         let dataDisplay = '';
         
