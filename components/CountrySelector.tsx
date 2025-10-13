@@ -131,6 +131,7 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
       {/* View All Countries Button */}
       {!search && !showAllCountries && (
         <button
+          type="button"
           onClick={() => {
             hapticFeedback('medium');
             setShowAllCountries(true);
@@ -147,53 +148,63 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
 
       {/* All Countries Modal */}
       {(search || showAllCountries) && (
-        <div className="bg-white rounded-2xl p-4 shadow-xl border-2 border-primary/10">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-bold text-text-primary">Все страны</h3>
-            {showAllCountries && !search && (
-              <button
-                onClick={() => setShowAllCountries(false)}
-                className="text-text-secondary hover:text-text-primary transition-colors"
-              >
-                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              </button>
-            )}
-          </div>
-          <div className="max-h-80 overflow-y-auto">
-            {loading ? (
-              <div className="text-center py-8 text-text-secondary">
-                Загрузка стран...
-              </div>
-            ) : filteredCountries.length === 0 ? (
-              <div className="text-center py-8 text-text-secondary">
-                Страны не найдены
-              </div>
-            ) : (
-              <div className="space-y-1">
-                {filteredCountries.map(country => (
-                  <button
-                    key={country.code}
-                    onClick={() => {
-                      handleSelect(country.code);
-                      setShowAllCountries(false);
-                    }}
-                    className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${
-                      selectedCountry === country.code
-                        ? 'bg-secondary/10 text-text-primary border-2 border-secondary'
-                        : 'hover:bg-background text-text-secondary border-2 border-transparent'
-                    }`}
-                  >
-                    <span className="text-2xl">{country.flag || '🏳️'}</span>
-                    <span className="font-medium">{country.nameRu || country.name}</span>
-                    {selectedCountry === country.code && (
-                      <span className="ml-auto text-secondary">✓</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setShowAllCountries(false)}
+          />
+          {/* Sheet / Modal */}
+          <div className="relative w-full sm:max-w-lg bg-white rounded-t-2xl sm:rounded-2xl p-4 shadow-2xl border-2 border-primary/10 max-h-[85vh] overflow-hidden">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-bold text-text-primary">Все страны</h3>
+              {showAllCountries && !search && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllCountries(false)}
+                  className="text-text-secondary hover:text-text-primary transition-colors"
+                >
+                  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                </button>
+              )}
+            </div>
+            <div className="max-h-[70vh] overflow-y-auto">
+              {loading ? (
+                <div className="text-center py-8 text-text-secondary">
+                  Загрузка стран...
+                </div>
+              ) : filteredCountries.length === 0 ? (
+                <div className="text-center py-8 text-text-secondary">
+                  Страны не найдены
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {filteredCountries.map(country => (
+                    <button
+                      key={country.code}
+                      type="button"
+                      onClick={() => {
+                        handleSelect(country.code);
+                        setShowAllCountries(false);
+                      }}
+                      className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${
+                        selectedCountry === country.code
+                          ? 'bg-secondary/10 text-text-primary border-2 border-secondary'
+                          : 'hover:bg-background text-text-secondary border-2 border-transparent'
+                      }`}
+                    >
+                      <span className="text-2xl">{country.flag || '🏳️'}</span>
+                      <span className="font-medium">{country.nameRu || country.name}</span>
+                      {selectedCountry === country.code && (
+                        <span className="ml-auto text-secondary">✓</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
