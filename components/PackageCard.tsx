@@ -65,8 +65,10 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
 
   // Получаем флаг/иконку для региона или страны
   const getRegionIcon = () => {
-    // Если это региональная категория — используем SVG-иконку
-    if (pkg.isRegionalCategory && pkg.regionName) {
+    const iconStyle = process.env.NEXT_PUBLIC_REGION_ICONS || 'emoji';
+
+    // SVG variant behind flag
+    if (iconStyle === 'svg' && pkg.isRegionalCategory && pkg.regionName) {
       const key = pkg.regionName.toLowerCase();
       const mapKey =
         /global.*light/.test(key) || /global.*standard/.test(key) || /global.*max/.test(key) || /global/.test(key)
@@ -84,6 +86,18 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
           : '';
       const Icon = (RegionIconMap as any)[mapKey];
       if (Icon) return <Icon className="w-8 h-8" />;
+    }
+
+    // Emoji (default)
+    if (pkg.isRegionalCategory) {
+      const name = (pkg.regionName || pkg.name || '').toLowerCase();
+      if (/global/.test(name)) return '🌍';
+      if (/europe/.test(name)) return '🇪🇺';
+      if (/asia/.test(name)) return '🌏';
+      if (/america/.test(name)) return '🌎';
+      if (/africa/.test(name)) return '🌍';
+      if (/middle\s*east/.test(name)) return '🕌';
+      return '🌐';
     }
     
     const name = pkg.name?.toLowerCase() || '';
