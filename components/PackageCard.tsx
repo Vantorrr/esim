@@ -170,16 +170,24 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
           </div>
           
           <div className="mt-3 space-y-2">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <div className="text-2xl font-black text-text-primary">
                 {priceInRub}₽
               </div>
-              {(Array.isArray((pkg as any).regionCoverage) && (pkg as any).regionCoverage.length) || (Array.isArray(pkg.coverage) && pkg.coverage.length > 3) ? (
+              {(Array.isArray((pkg as any).regionCoverage) && (pkg as any).regionCoverage.length > 0) || (Array.isArray(pkg.coverage) && pkg.coverage.length > 3) ? (
                 <button
-                  onClick={() => setCoverageOpen(true)}
-                  className="text-primary font-medium text-xs underline underline-offset-2"
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCoverageOpen(true);
+                  }}
+                  className="text-primary font-medium text-xs underline underline-offset-2 whitespace-nowrap flex items-center gap-1"
                 >
-                  Страны покрытия
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                    <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="currentColor" strokeWidth="2"/>
+                  </svg>
+                  {((pkg as any).regionCoverage?.length || pkg.coverage?.length || 0)} {((pkg as any).regionCoverage?.length || pkg.coverage?.length || 0) === 1 ? 'страна' : ((pkg as any).regionCoverage?.length || pkg.coverage?.length || 0) < 5 ? 'страны' : 'стран'}
                 </button>
               ) : null}
             </div>
