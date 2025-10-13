@@ -133,7 +133,7 @@ function CheckoutContent() {
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-text-secondary">Название:</span>
-              <span className="font-medium text-text-primary">{pkg.name}</span>
+              <span className="font-medium text-text-primary">{pkg.name?.replace(/_V\d+$/i, '').replace(/,\s*V\d+/i, '')}</span>
             </div>
             
             <div className="flex justify-between items-center">
@@ -144,26 +144,21 @@ function CheckoutContent() {
             <div className="flex justify-between items-start">
               <span className="text-text-secondary">Срок действия:</span>
               <div className="text-right">
-                <div className="font-medium text-text-primary">{pkg.validity} дней</div>
+                <div className="font-medium text-text-primary">
+                  {pkg.validity} {pkg.validity === 1 ? 'день' : pkg.validity < 5 ? 'дня' : 'дней'}
+                </div>
                 <div className="text-xs text-text-secondary mt-0.5">С момента активации</div>
               </div>
             </div>
 
-            {Array.isArray((pkg as any).regionCoverage) && (pkg as any).regionCoverage.length > 0 ? (
+            {(Array.isArray((pkg as any).regionCoverage) && (pkg as any).regionCoverage.length > 3) || (Array.isArray(pkg.coverage) && pkg.coverage.length > 3) ? (
               <div className="flex justify-between items-start">
                 <span className="text-text-secondary">Покрытие:</span>
                 <button onClick={() => setCoverageOpen(true)} className="text-right text-sm text-primary underline-offset-2 hover:underline">
-                  {(pkg as any).regionCoverage.length} стран(ы)
+                  {((pkg as any).regionCoverage?.length || pkg.coverage?.length || 0)} {((pkg as any).regionCoverage?.length || pkg.coverage?.length || 0) === 1 ? 'страна' : ((pkg as any).regionCoverage?.length || pkg.coverage?.length || 0) < 5 ? 'страны' : 'стран'}
                 </button>
               </div>
-            ) : Array.isArray(pkg.coverage) && pkg.coverage.length > 0 && (
-              <div className="flex justify-between items-start">
-                <span className="text-text-secondary">Покрытие:</span>
-                <button onClick={() => setCoverageOpen(true)} className="text-right text-sm text-primary underline-offset-2 hover:underline">
-                  {pkg.coverage.length} стран(ы)
-                </button>
-              </div>
-            )}
+            ) : null}
             
             <div className="border-t border-gray-200 pt-3 mt-3">
               <div className="flex justify-between items-center text-lg">
