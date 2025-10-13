@@ -169,26 +169,26 @@ export default function PackageCard({ package: pkg }: PackageCardProps) {
             </div>
           </div>
           
-          <div className="flex items-center justify-between gap-3 mt-2">
-            <div className="text-2xl font-black text-text-primary whitespace-nowrap">
-              {priceInRub}₽
-            </div>
-            <div className="flex items-center gap-2">
+          <div className="mt-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="text-2xl font-black text-text-primary">
+                {priceInRub}₽
+              </div>
               {(Array.isArray((pkg as any).regionCoverage) && (pkg as any).regionCoverage.length) || (Array.isArray(pkg.coverage) && pkg.coverage.length > 3) ? (
                 <button
                   onClick={() => setCoverageOpen(true)}
-                  className="text-primary font-medium text-xs underline underline-offset-2 whitespace-nowrap"
+                  className="text-primary font-medium text-xs underline underline-offset-2"
                 >
                   Страны покрытия
                 </button>
               ) : null}
-              <button
-                onClick={handleBuy}
-                className="px-6 py-2 bg-gradient-primary text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all shadow-md active:scale-95 whitespace-nowrap"
-              >
-                {pkg.isRegionalCategory ? 'Выбрать' : 'Купить'}
-              </button>
             </div>
+            <button
+              onClick={handleBuy}
+              className="w-full px-6 py-2.5 bg-gradient-primary text-white rounded-xl font-bold text-base hover:opacity-90 transition-all shadow-md active:scale-95"
+            >
+              {pkg.isRegionalCategory ? 'Выбрать' : 'Купить'}
+            </button>
           </div>
         </div>
       </div>
