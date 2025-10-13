@@ -49,7 +49,7 @@ const faqData: FAQItem[] = [
   },
   {
     question: 'Как связаться с поддержкой?',
-    answer: 'Напишите нам в Telegram: @support или на email: support@ewave.com. Мы отвечаем 24/7!',
+    answer: 'Напишите нам в Telegram: @support или на email: ewavenet@yandex.com. Мы отвечаем 24/7!',
   },
 ];
 
@@ -162,7 +162,7 @@ export default function FAQPage() {
               Telegram
             </a>
             <a
-              href="mailto:support@ewave.com"
+              href="mailto:ewavenet@yandex.com"
               className="px-6 py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl font-medium hover:bg-white/30 transition-colors"
             >
               Email
