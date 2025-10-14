@@ -494,7 +494,7 @@ class EsimGoAPI {
           if (!set.has(code)) {
             // Генерируем emoji флаг из ISO кода (например, US → 🇺🇸)
             const flag = code.length === 2 
-              ? String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 - 65 + c.charCodeAt(0)))
+              ? String.fromCodePoint(...code.toUpperCase().split('').map(c => 0x1F1E6 - 65 + c.charCodeAt(0)))
               : '🌐';
             set.set(code, { 
               code, 
@@ -503,7 +503,30 @@ class EsimGoAPI {
             });
           }
         }
-        const countriesList = Array.from(set.values());
+        let countriesList = Array.from(set.values())
+          // оставляем только корректные ISO-2
+          .filter(c => typeof c.code === 'string' && /^[A-Z]{2}$/i.test(c.code))
+          // нормализуем код к верхнему регистру
+          .map(c => ({ ...c, code: c.code.toUpperCase() }));
+
+        // Если список выглядит подозрительно маленьким — добавим ключевые страны явно
+        const mustHave = [
+          { code: 'VN', name: 'Vietnam', nameRu: 'Вьетнам' },
+          { code: 'AE', name: 'United Arab Emirates', nameRu: 'ОАЭ' },
+          { code: 'TH', name: 'Thailand', nameRu: 'Таиланд' },
+          { code: 'TR', name: 'Turkey', nameRu: 'Турция' },
+          { code: 'CN', name: 'China', nameRu: 'Китай' },
+        ];
+        const existingCodes = new Set(countriesList.map(c => c.code));
+        for (const item of mustHave) {
+          if (!existingCodes.has(item.code)) {
+            const flag = String.fromCodePoint(...item.code.split('').map(c => 0x1F1E6 - 65 + c.toUpperCase().charCodeAt(0)));
+            countriesList.push({ code: item.code, name: item.name, flag });
+          }
+        }
+
+        // Сортируем по названию для стабильности
+        countriesList.sort((a, b) => (a.name || a.code).localeCompare(b.name || b.code));
         console.log('[eSIM-GO] derived', countriesList.length, 'countries from cache');
         return { countries: countriesList };
       } catch (err) {
