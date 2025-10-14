@@ -36,6 +36,12 @@ const mainMenu = {
           callback_data: 'help'
         },
         {
+          text: '💬 Поддержка',
+          url: 'https://t.me/eWaveSupport'
+        }
+      ],
+      [
+        {
           text: '✉️ Email',
           callback_data: 'email'
         }
