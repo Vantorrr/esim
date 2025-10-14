@@ -243,9 +243,14 @@ ngrok http 3000
 
 ## 🤝 Поддержка
 
-- 📧 Email: support@ewave.com
-- 💬 Telegram: [@support](https://t.me/support)
+- 📧 Email: ewavenet@yandex.com
+- 💬 Telegram: [@eWaveSupport](https://t.me/eWaveSupport)
 - 📚 Документация API: [esim-go.com/docs](https://docs.esim-go.com)
+
+## 🧑‍💻 Разработка
+
+- Команда: [N0FACE](https://noface.digital)
+- Руководитель: [@pavel_xdev](https://t.me/pavel_xdev)
 
 ## 📄 Лицензия
 

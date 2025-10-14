@@ -54,7 +54,7 @@ export default function Footer() {
             <ul className="space-y-2 text-sm">
               <li>
                 <a 
-                  href="https://t.me/support" 
+                  href="https://t.me/eWaveSupport" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-text-secondary hover:text-primary transition-colors flex items-center gap-2"
@@ -138,6 +138,11 @@ export default function Footer() {
             </button>
           </div>
           <p className="mt-2">Сделано с ❤️ для путешественников</p>
+          <p className="mt-1">
+            Разработка: <a href="https://noface.digital" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">N0FACE</a>
+            <span className="mx-2 text-text-secondary/50">•</span>
+            Руководитель: <a href="https://t.me/pavel_xdev" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">@pavel_xdev</a>
+          </p>
         </div>
       </div>
     </footer>
