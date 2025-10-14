@@ -60,10 +60,10 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
       tr: ['турция', 'turkey', 'turkiye'],
       cn: ['китай', 'china', 'zhongguo'],
       th: ['тайланд', 'таиланд', 'thailand'],
+      vn: ['вьетнам', 'viet nam', 'vietnam'],
       de: ['германия', 'germany', 'deutschland'],
       gb: ['великобритания', 'англия', 'united kingdom', 'uk', 'britain'],
       ru: ['россия', 'russia'],
-      vn: ['вьетнам', 'viet nam', 'vietnam'],
       ae2: [],
     };
 

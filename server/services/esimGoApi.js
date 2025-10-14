@@ -552,8 +552,22 @@ class EsimGoAPI {
     }
     
     // Фильтруем пакеты по паттерну
-    const regionPackages = this.allPackagesCache.filter(p => p && p.name && pattern.test(p.name));
+    let regionPackages = this.allPackagesCache.filter(p => p && p.name && pattern.test(p.name));
     console.log('[eSIM-GO] Found', regionPackages.length, 'packages matching pattern for', regionSlug);
+
+    // Middle East: исключаем Africa и при отсутствии результатов используем статическое покрытие
+    if (regionSlug === 'middle-east') {
+      // 1) отсекаем варианты, в названии которых фигурирует Africa
+      regionPackages = regionPackages.filter(p => !/africa/i.test(p.name || ''));
+
+      // 2) если после отсечения пусто — фильтруем по статическому списку ISO стран Ближнего Востока
+      if (regionPackages.length === 0) {
+        const staticME = getStaticCoverageByName('Middle East') || getStaticCoverageByName('Ближний Восток');
+        if (Array.isArray(staticME) && staticME.length > 0) {
+          regionPackages = this.allPackagesCache.filter(p => Array.isArray(p.coverage) && p.coverage.some(iso => staticME.includes(iso)));
+        }
+      }
+    }
     
     // Убираем дубликаты (одинаковый data + validity, но разные группы) — оставляем самый предпочтительный
     const uniqueMap = new Map();
