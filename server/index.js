@@ -7,6 +7,8 @@ const webhookRoutes = require('./routes/webhook');
 const tinkoffRoutes = require('./routes/tinkoff');
 const esimGoWebhookRoutes = require('./routes/esimGoWebhook');
 const botRoutes = require('./routes/bot');
+const esimGoApi = require('./services/esimGoApi');
+const cacheRepo = require('./services/cacheRepo');
 
 // Запускаем Telegram бота
 if (process.env.TELEGRAM_BOT_TOKEN) {
@@ -39,6 +41,17 @@ app.use('/api/bot', botRoutes);
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Admin: force rebuild cache (GET/POST)
+app.all('/api/admin/rebuild-cache', async (req, res) => {
+  try {
+    await cacheRepo.deleteSnapshot('catalogue_v2_5');
+    esimGoApi.refreshCache();
+    res.json({ success: true, message: 'Rebuild started' });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // Error handler
