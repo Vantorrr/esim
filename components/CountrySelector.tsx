@@ -109,10 +109,10 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
 
   // При изменении строки поиска — прокручиваем список вверх, чтобы виден был топ-матч
   useEffect(() => {
-    if (listRef.current) {
+    if (listRef.current && search) {
       listRef.current.scrollTop = 0;
     }
-  }, [search]);
+  }, [search, sortedFilteredCountries.length]);
 
   const handleSelect = (countryCode: string) => {
     hapticFeedback('light');
@@ -263,7 +263,7 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
                 </div>
               ) : (
                 <div className="space-y-1">
-                  {sortedFilteredCountries.map(country => (
+                  {(search ? sortedFilteredCountries.slice(0, 10) : sortedFilteredCountries).map(country => (
                     <button
                       key={country.code}
                       type="button"
@@ -284,6 +284,11 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
                       )}
                     </button>
                   ))}
+                  {search && sortedFilteredCountries.length > 10 && (
+                    <div className="text-center py-2 text-text-secondary text-sm">
+                      Показано 10 из {sortedFilteredCountries.length}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
