@@ -143,6 +143,23 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
         )}
       </div>
 
+      {/* Search */}
+      <div className="relative">
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary">
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
+            <path d="m21 21-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+        </div>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Поиск страны..."
+          className="w-full pl-12 pr-4 py-3 rounded-2xl bg-white border-2 border-primary/20 focus:border-primary outline-none transition-colors text-text-primary shadow-sm"
+        />
+      </div>
+
       {/* Popular Countries */}
       {!search && (
         <div>
