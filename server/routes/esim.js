@@ -115,5 +115,16 @@ router.post('/admin/rebuild-cache', async (req, res) => {
   }
 });
 
+// GET alias для удобного вызова из браузера
+router.get('/admin/rebuild-cache', async (req, res) => {
+  try {
+    await cacheRepo.deleteSnapshot('catalogue_v2_5');
+    esimGoApi.refreshCache();
+    res.json({ success: true, message: 'Rebuild started' });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 module.exports = router;
 
