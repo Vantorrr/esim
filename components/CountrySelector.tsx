@@ -82,6 +82,30 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
     return false;
   });
 
+  // Сортировка по релевантности: точные совпадения и начинается с — наверх
+  const sortedFilteredCountries = [...filteredCountries].sort((a, b) => {
+    const normalize = (s: string) => s
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/ё/g, 'е')
+      .trim();
+
+    const q = normalize(search);
+    const rank = (c: Country) => {
+      const code = (c.code || '').toLowerCase();
+      const nameEn = normalize(c.name || '');
+      const nameRu = normalize(c.nameRu || '');
+      if (!q) return 0;
+      if (code === q || nameEn === q || nameRu === q) return 100;
+      if (nameRu.startsWith(q) || nameEn.startsWith(q)) return 80;
+      if (nameRu.includes(q) || nameEn.includes(q) || code.includes(q)) return 50;
+      return 0;
+    };
+
+    return rank(b) - rank(a);
+  });
+
   const handleSelect = (countryCode: string) => {
     hapticFeedback('light');
     onSelectCountry(countryCode === selectedCountry ? null : countryCode);
@@ -211,7 +235,7 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
                 </div>
               ) : (
                 <div className="space-y-1">
-                  {filteredCountries.map(country => (
+                  {sortedFilteredCountries.map(country => (
                     <button
                       key={country.code}
                       type="button"
