@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const esimGoApi = require('../services/esimGoApi');
 const currencyService = require('../services/currencyService');
+const cacheRepo = require('../services/cacheRepo');
 
 // Получить текущий курс USD/RUB
 router.get('/currency', (req, res) => {
@@ -99,6 +100,18 @@ router.get('/orders/:id/qr', async (req, res) => {
     res.json(qrData);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Админ: форс обновить кэш каталога (удалить снапшот и перезагрузить)
+router.post('/admin/rebuild-cache', async (req, res) => {
+  try {
+    await cacheRepo.deleteSnapshot('catalogue_v2_5');
+    // Тригерим обновление
+    esimGoApi.refreshCache();
+    res.json({ success: true, message: 'Rebuild started' });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 

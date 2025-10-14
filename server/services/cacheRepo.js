@@ -44,4 +44,15 @@ async function saveSnapshot(key, data) {
   }
 }
 
-module.exports = { getSnapshot, saveSnapshot };
+async function deleteSnapshot(key) {
+  try {
+    await ensureTable();
+    await query('DELETE FROM cache_snapshots WHERE key = $1', [key]);
+    return true;
+  } catch (err) {
+    console.warn('[CacheRepo] deleteSnapshot failed:', err.message);
+    return false;
+  }
+}
+
+module.exports = { getSnapshot, saveSnapshot, deleteSnapshot };
