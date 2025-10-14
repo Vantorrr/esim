@@ -217,7 +217,10 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
             onClick={() => setShowAllCountries(false)}
           />
           {/* Sheet / Modal */}
-          <div className="relative w-full sm:max-w-lg bg-white rounded-t-2xl sm:rounded-2xl p-4 shadow-2xl border-2 border-primary/10 max-h-[80vh] overflow-hidden flex flex-col">
+          <div
+            className="relative w-full sm:max-w-lg bg-white rounded-t-2xl sm:rounded-2xl p-4 shadow-2xl border-2 border-primary/10 max-h-[80vh] overflow-hidden flex flex-col mb-24"
+            style={{ marginBottom: 'calc(env(safe-area-inset-bottom, 0px) + 72px)' }}
+          >
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-bold text-text-primary">Все страны</h3>
               {showAllCountries && !search && (
