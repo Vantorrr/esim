@@ -154,7 +154,7 @@ export default function FAQPage() {
           <p className="mb-4 opacity-90">Наша поддержка всегда готова помочь!</p>
           <div className="flex gap-3 justify-center flex-wrap">
             <a
-              href="https://t.me/support"
+              href="https://t.me/eWaveSupport"
               target="_blank"
               rel="noopener noreferrer"
               className="px-6 py-3 bg-white text-primary rounded-xl font-medium hover:bg-white/90 transition-colors"
