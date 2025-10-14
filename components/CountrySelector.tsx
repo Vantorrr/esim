@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getCountries } from '@/lib/api';
 import { hapticFeedback } from '@/lib/telegram';
 import { getCountryNameRu } from '@/lib/countryNames';
@@ -22,6 +22,7 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showAllCountries, setShowAllCountries] = useState(false);
+  const listRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     loadCountries();
@@ -105,6 +106,13 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
 
     return rank(b) - rank(a);
   });
+
+  // При изменении строки поиска — прокручиваем список вверх, чтобы виден был топ-матч
+  useEffect(() => {
+    if (listRef.current) {
+      listRef.current.scrollTop = 0;
+    }
+  }, [search]);
 
   const handleSelect = (countryCode: string) => {
     hapticFeedback('light');
@@ -224,7 +232,7 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
                 </button>
               )}
             </div>
-            <div className="max-h-[70vh] overflow-y-auto">
+            <div ref={listRef} className="max-h-[70vh] overflow-y-auto">
               {loading ? (
                 <div className="text-center py-8 text-text-secondary">
                   Загрузка стран...
