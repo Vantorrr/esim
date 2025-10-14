@@ -117,6 +117,9 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
   const handleSelect = (countryCode: string) => {
     hapticFeedback('light');
     onSelectCountry(countryCode === selectedCountry ? null : countryCode);
+    // Закрываем модалку и очищаем поиск, чтобы оверлей не оставался
+    setShowAllCountries(false);
+    setSearch('');
   };
 
   const popularCountries = ['CN', 'TH', 'TR', 'AE'];
