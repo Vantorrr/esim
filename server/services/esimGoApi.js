@@ -155,7 +155,7 @@ class EsimGoAPI {
 
   // Умная фильтрация: сперва приоритетные ограниченные пакеты, затем безлимит
   smartFilter(packages, opts = {}) {
-    const { limit = 10, reserveUnlimited = true, maxUnlimited = 6 } = opts;
+    const { limit = 10, reserveUnlimited = true, maxUnlimited = 6, ensure7Days = true } = opts;
     // Помощники
     const parseDataToMb = (dataStr) => {
       if (!dataStr) return 0;
@@ -213,12 +213,43 @@ class EsimGoAPI {
     if (reserveUnlimited && unlimitedSorted.length > 0) {
       const reserved = Math.min(unlimitedSorted.length, maxUnlimited, limit);
       const limitedCap = Math.max(0, limit - reserved);
-      const firstLimited = limitedSorted.slice(0, limitedCap);
+      let firstLimited = limitedSorted.slice(0, limitedCap);
+
+      // Гарантируем один 7-дневный ограниченный тариф (если есть)
+      if (ensure7Days && limitedSorted.length > 0) {
+        const seven = [...limitedSorted]
+          .filter(p => Number(p.validity) === 7)
+          .sort((a, b) => (a.price - b.price))[0];
+        if (seven) {
+          const already = firstLimited.find(p => p.id === seven.id);
+          if (!already) {
+            if (firstLimited.length < limitedCap) {
+              firstLimited = [seven, ...firstLimited];
+            } else if (firstLimited.length > 0) {
+              // заменяем самый дорогой в limited на 7-дневный
+              const maxIdx = firstLimited.reduce((mi, p, i, arr) => (p.price > arr[mi].price ? i : mi), 0);
+              firstLimited[maxIdx] = seven;
+            }
+          }
+        }
+      }
       const firstUnlimited = unlimitedSorted.slice(0, reserved);
       return [...firstLimited, ...firstUnlimited];
     }
 
-    const result = [...limitedSorted, ...unlimitedSorted];
+    let result = [...limitedSorted, ...unlimitedSorted];
+    // Без резервирования безлимитов — всё равно постараемся добавить 7 дней
+    if (ensure7Days) {
+      const seven = [...limitedSorted]
+        .filter(p => Number(p.validity) === 7)
+        .sort((a, b) => (a.price - b.price))[0];
+      if (seven) {
+        const inResult = result.slice(0, limit).find(p => p.id === seven.id);
+        if (!inResult) {
+          result = [seven, ...result.filter(p => p.id !== seven.id)];
+        }
+      }
+    }
     return result.slice(0, limit);
   }
 
@@ -540,7 +571,7 @@ class EsimGoAPI {
     console.log('[eSIM-GO] After deduplication:', uniquePackages.length, 'unique packages');
     
     // Сортируем по приоритету (GB и дни)
-    const sorted = this.smartFilter(uniquePackages, { limit: 50, reserveUnlimited: true, maxUnlimited: 10 });
+    const sorted = this.smartFilter(uniquePackages, { limit: 50, reserveUnlimited: true, maxUnlimited: 10, ensure7Days: true });
     console.log('[eSIM-GO] After smart filter:', sorted.length, 'packages');
     
     return { esims: sorted };
@@ -589,7 +620,7 @@ class EsimGoAPI {
       const deduped = Array.from(uniqueMap.values());
       
       // Применяем умную фильтрацию: топ-10 по приоритету
-      const smartFiltered = this.smartFilter(deduped, { limit: 10, reserveUnlimited: true, maxUnlimited: 6 });
+      const smartFiltered = this.smartFilter(deduped, { limit: 10, reserveUnlimited: true, maxUnlimited: 6, ensure7Days: true });
       console.log('[eSIM-GO] smart filtered to', smartFiltered.length, 'packages');
       return { esims: smartFiltered };
     }
