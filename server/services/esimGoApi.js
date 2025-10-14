@@ -41,6 +41,12 @@ class EsimGoAPI {
 
   async restoreFromSnapshot() {
     try {
+      // Если установлен флаг принудительного обновления - пропускаем восстановление из БД
+      if (process.env.FORCE_CACHE_REBUILD === 'true') {
+        console.log('[eSIM-GO] FORCE_CACHE_REBUILD=true, skipping DB restore');
+        return;
+      }
+      
       const snap = await cacheRepo.getSnapshot('catalogue_v2_5');
       if (snap && Array.isArray(snap.data) && snap.data.length > 0) {
         // Проверяем, правильный ли формат coverage (должны быть ISO-коды, а не названия)
