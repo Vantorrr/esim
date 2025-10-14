@@ -37,7 +37,7 @@ const mainMenu = {
         },
         {
           text: '✉️ Email',
-          url: 'mailto:ewavenet@yandex.com'
+          callback_data: 'email'
         }
       ]
     ]
@@ -143,6 +143,9 @@ bot.on('callback_query', async (query) => {
         `Почта поддержки: ewavenet@yandex.com`,
         { parse_mode: 'Markdown', ...mainMenu }
       );
+      break;
+    case 'email':
+      bot.sendMessage(chatId, 'Почта поддержки: ewavenet@yandex.com', { ...mainMenu });
       break;
   }
 });
