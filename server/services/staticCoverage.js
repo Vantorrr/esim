@@ -10,6 +10,7 @@ const REGION_LIST = {
   GLOBAL: 'AT;DK;IE;IT;SE;IM;FR;BG;CY;EE;FI;GR;HU;LV;LT;NL;NO;PL;RO;SK;ES;GB;TR;DE;MT;CH;BE;HR;CZ;LI;LU;PT;SI;IS;UA;JE;SG;MO;HK;IL;AX;ID;VN;RU;AE;AU;TH;TW;LK;MY;PK;UZ;EG;NZ;AL;KR;CA;KZ;MD;MK;KW;MX;GG;JO;OM;GI;MA;BR;CL;RS;JP;ME;GU;US;TZ;UG;CR;EC;NI;IN;AR;SV;PE;UY;CN;PA;RE;TN;BA;ZA;ZM;MG;NG;KE;AD;IQ;QA;SC;MU;CO;GT;CM;GY;SA;PY;BO',
   MIDDLE_EAST_AFRICA: 'EG;IL;JO;KW;MA;OM;TR;AE',
   MENA: 'AE;BH;EG;IL;MA;SA;TN;QA;KW',
+  MIDDLE_EAST: 'AE;BH;IL;JO;KW;QA;SA;TR;OM',
   NORTH_AMERICA: 'CA;MX;US',
 };
 
@@ -49,7 +50,8 @@ function getStaticCoverageByName(name) {
   if (/europe\s*lite/i.test(n)) return REGION_CODES.EUROPE_LITE;
   if (/eu\+|europe/i.test(n)) return REGION_CODES.EU_PLUS;
   if (/middle\s*east.*africa/i.test(n)) return REGION_CODES.MIDDLE_EAST_AFRICA;
-  if (/middle\s*east|mena|north\s*africa/i.test(n)) return REGION_CODES.MENA;
+  if (/middle\s*east/i.test(n)) return REGION_CODES.MIDDLE_EAST;
+  if (/mena|north\s*africa/i.test(n)) return REGION_CODES.MENA;
   if (/africa/i.test(n)) return REGION_CODES.AFRICA;
   if (/americas|america/i.test(n)) return union(REGION_CODES.AMERICAS, REGION_CODES.NORTH_AMERICA);
   if (/asia/i.test(n)) return REGION_CODES.ASIA;

@@ -44,12 +44,42 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
   };
 
   const filteredCountries = countries.filter(country => {
-    const searchLower = search.toLowerCase();
-    return (
-      country.name.toLowerCase().includes(searchLower) ||
-      country.code.toLowerCase().includes(searchLower) ||
-      (country.nameRu && country.nameRu.toLowerCase().includes(searchLower))
-    );
+    const searchLower = search.toLowerCase().trim();
+    if (!searchLower) return true;
+
+    const normalize = (s: string) => s
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // remove diacritics
+      .replace(/ё/g, 'е')
+      .trim();
+
+    const synonyms: Record<string, string[]> = {
+      ae: ['оаэ', 'оае', 'uae', 'emirates', 'united arab emirates', 'эмираты'],
+      us: ['сша', 'usa', 'united states', 'america', 'америка', 'штаты'],
+      tr: ['турция', 'turkey', 'turkiye'],
+      cn: ['китай', 'china', 'zhongguo'],
+      th: ['тайланд', 'таиланд', 'thailand'],
+      de: ['германия', 'germany', 'deutschland'],
+      gb: ['великобритания', 'англия', 'united kingdom', 'uk', 'britain'],
+      ru: ['россия', 'russia'],
+      vn: ['вьетнам', 'viet nam', 'vietnam'],
+      ae2: [],
+    };
+
+    const code = (country.code || '').toLowerCase();
+    const nameEn = normalize(country.name || '');
+    const nameRu = normalize(country.nameRu || '');
+    const query = normalize(searchLower);
+
+    // direct matches
+    if (nameEn.includes(query) || nameRu.includes(query) || code.includes(query)) return true;
+
+    // synonyms by code
+    const syns = synonyms[code as keyof typeof synonyms] || [];
+    if (syns.some(s => s.includes(query) || query.includes(s))) return true;
+
+    return false;
   });
 
   const handleSelect = (countryCode: string) => {
