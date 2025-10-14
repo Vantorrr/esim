@@ -210,14 +210,14 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
 
       {/* All Countries Modal */}
       {(search || showAllCountries) && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/40"
             onClick={() => setShowAllCountries(false)}
           />
           {/* Sheet / Modal */}
-          <div className="relative w-full sm:max-w-lg bg-white rounded-t-2xl sm:rounded-2xl p-4 shadow-2xl border-2 border-primary/10 max-h-[85vh] overflow-hidden">
+          <div className="relative w-full sm:max-w-lg bg-white rounded-t-2xl sm:rounded-2xl p-4 shadow-2xl border-2 border-primary/10 max-h-[80vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-bold text-text-primary">Все страны</h3>
               {showAllCountries && !search && (
@@ -252,7 +252,7 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
                 autoFocus
               />
             </div>
-            <div ref={listRef} className="max-h-[70vh] overflow-y-auto">
+            <div ref={listRef} className="flex-1 overflow-y-auto -mx-4 px-4">
               {loading ? (
                 <div className="text-center py-8 text-text-secondary">
                   Загрузка стран...
