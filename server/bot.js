@@ -72,28 +72,12 @@ bot.onText(/\/start/, async (msg) => {
   `.trim();
 
   try {
-    // Отправляем фото с текстом и кнопками
-    const photoPath = path.join(__dirname, '../public/welcome.jpg');
-    
-    if (fs.existsSync(photoPath)) {
-      await bot.sendPhoto(chatId, photoPath, {
-        caption: welcomeText,
-        parse_mode: 'Markdown',
-        ...mainMenu
-      });
-    } else {
-      // Если фото нет, отправляем просто текст
-      await bot.sendMessage(chatId, welcomeText, {
-        parse_mode: 'Markdown',
-        ...mainMenu
-      });
-    }
-  } catch (error) {
-    console.error('Ошибка отправки:', error);
     await bot.sendMessage(chatId, welcomeText, {
       parse_mode: 'Markdown',
       ...mainMenu
     });
+  } catch (error) {
+    console.error('Ошибка отправки:', error);
   }
 });
 
