@@ -13,7 +13,7 @@ router.post('/telegram-webhook', async (req, res) => {
   }
 });
 
-// Установить webhook
+// Установить webhook (POST)
 router.post('/set-webhook', async (req, res) => {
   try {
     const baseUrl = process.env.WEB_APP_URL || `${req.protocol}://${req.get('host')}`;
@@ -32,8 +32,31 @@ router.post('/set-webhook', async (req, res) => {
   }
 });
 
+// Установить webhook (GET alias для удобства из браузера)
+router.get('/set-webhook', async (req, res) => {
+  try {
+    const baseUrl = process.env.WEB_APP_URL || `${req.protocol}://${req.get('host')}`;
+    const webhookUrl = `${baseUrl}/api/bot/telegram-webhook`;
+    const result = await bot.setWebHook(webhookUrl);
+    res.json({ success: true, webhookUrl, result });
+  } catch (error) {
+    console.error('Set webhook (GET) error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Удалить webhook (для dev)
 router.post('/delete-webhook', async (req, res) => {
+  try {
+    const result = await bot.deleteWebHook();
+    res.json({ success: true, result });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Удалить webhook (GET alias)
+router.get('/delete-webhook', async (req, res) => {
   try {
     const result = await bot.deleteWebHook();
     res.json({ success: true, result });
