@@ -474,11 +474,20 @@ class EsimGoAPI {
     ].filter(Boolean);
     try {
       const res = await this.tryEndpoints(candidates);
-      // Попытка нормализации форматов ответа
-      if (Array.isArray(res)) return { countries: res };
-      if (res?.countries) return res;
-      if (res?.items) return { countries: res.items };
-      return { countries: [] };
+      // Нормализуем к единому виду и исключаем RU
+      let countriesArr = [];
+      if (Array.isArray(res)) countriesArr = res;
+      else if (res?.countries) countriesArr = res.countries;
+      else if (res?.items) countriesArr = res.items;
+
+      const notRU = (item) => {
+        if (!item) return false;
+        if (typeof item === 'string') return item.toUpperCase() !== 'RU';
+        const code = (item.code || item.iso || '').toString().toUpperCase();
+        return code !== 'RU';
+      };
+      const filtered = (countriesArr || []).filter(notRU);
+      return { countries: filtered };
     } catch (e) {
       console.warn('[eSIM-GO] countries direct failed → derive from bundles');
       // Фоллбек: строим список стран из ПОЛНОГО каталога (не топ-10!)
@@ -508,6 +517,9 @@ class EsimGoAPI {
           .filter(c => typeof c.code === 'string' && /^[A-Z]{2}$/i.test(c.code))
           // нормализуем код к верхнему регистру
           .map(c => ({ ...c, code: c.code.toUpperCase() }));
+
+        // Исключаем RU
+        countriesList = countriesList.filter(c => (c.code || '').toUpperCase() !== 'RU');
 
         // Если список выглядит подозрительно маленьким — добавим ключевые страны явно
         const mustHave = [
@@ -622,6 +634,11 @@ class EsimGoAPI {
 
   // Получить пакеты для страны
   async getPackages(countryCode) {
+    // Временная блокировка выдачи по РФ (эквайринг)
+    if (countryCode && String(countryCode).toUpperCase() === 'RU') {
+      console.warn('[eSIM-GO] RU country requested — returning empty list');
+      return { esims: [] };
+    }
     // Если страна не указана — возвращаем региональные категории
     if (!countryCode) {
       if (this.topPackagesCache && this.topPackagesCache.length > 0) {

@@ -32,7 +32,10 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
     try {
       const data = await getCountries();
       // Добавляем русские названия к каждой стране
-      const countriesWithRu = (data.countries || []).map((c: Country) => ({
+      const countriesWithRu = (data.countries || [])
+        // Подстраховка: исключаем RU на фронте
+        .filter((c: Country) => (c.code || '').toUpperCase() !== 'RU')
+        .map((c: Country) => ({
         ...c,
         nameRu: getCountryNameRu(c.code),
       }));
@@ -123,6 +126,8 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
   };
 
   const popularCountries = ['CN', 'TH', 'TR', 'AE'];
+  // Исключаем RU из популярных на всякий случай
+  const safePopular = popularCountries.filter(code => code.toUpperCase() !== 'RU');
 
   return (
     <div className="space-y-4">
@@ -168,7 +173,7 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
         <div>
           <h3 className="text-sm font-medium text-text-secondary mb-3">Популярные направления</h3>
           <div className="grid grid-cols-4 gap-3">
-            {popularCountries.map(code => {
+            {safePopular.map(code => {
               const country = countries.find(c => c.code === code);
               if (!country) return null;
               
