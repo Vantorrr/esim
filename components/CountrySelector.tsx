@@ -33,8 +33,11 @@ export default function CountrySelector({ selectedCountry, onSelectCountry }: Co
       const data = await getCountries();
       // Добавляем русские названия к каждой стране
       const countriesWithRu = (data.countries || [])
-        // Подстраховка: исключаем RU на фронте
-        .filter((c: Country) => (c.code || '').toUpperCase() !== 'RU')
+        // Подстраховка: исключаем RU и UA на фронте
+        .filter((c: Country) => {
+          const code = (c.code || '').toUpperCase();
+          return code !== 'RU' && code !== 'UA';
+        })
         .map((c: Country) => ({
         ...c,
         nameRu: getCountryNameRu(c.code),

@@ -14,6 +14,11 @@ export default function CoverageModal({ isOpen, onClose, coverage, title = 'Ст
   const list = useMemo(() => {
     const unique = Array.from(new Set((coverage || []).filter(Boolean)));
     return unique
+      // Исключаем RU и UA из списка покрытия
+      .filter(code => {
+        const upperCode = code.toUpperCase();
+        return upperCode !== 'RU' && upperCode !== 'UA';
+      })
       .map(code => ({ code: code.toUpperCase(), name: getCountryNameRu(code) }))
       .sort((a, b) => a.name.localeCompare(b.name, 'ru'));
   }, [coverage]);

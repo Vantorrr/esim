@@ -322,6 +322,11 @@ class EsimGoAPI {
         if (Array.isArray(p.countries) && p.countries.length > 0 && p.countries[0]?.iso) {
           coverageList = p.countries.map(c => c.iso).filter(Boolean);
         }
+        // Исключаем RU и UA из coverage
+        coverageList = coverageList.filter(code => {
+          const upperCode = (code || '').toString().toUpperCase();
+          return upperCode !== 'RU' && upperCode !== 'UA';
+        });
         
         return {
           id: p.name || p.id || p.packageId || p.code,
@@ -480,13 +485,16 @@ class EsimGoAPI {
       else if (res?.countries) countriesArr = res.countries;
       else if (res?.items) countriesArr = res.items;
 
-      const notRU = (item) => {
+      const notRUorUA = (item) => {
         if (!item) return false;
-        if (typeof item === 'string') return item.toUpperCase() !== 'RU';
+        if (typeof item === 'string') {
+          const code = item.toUpperCase();
+          return code !== 'RU' && code !== 'UA';
+        }
         const code = (item.code || item.iso || '').toString().toUpperCase();
-        return code !== 'RU';
+        return code !== 'RU' && code !== 'UA';
       };
-      const filtered = (countriesArr || []).filter(notRU);
+      const filtered = (countriesArr || []).filter(notRUorUA);
       return { countries: filtered };
     } catch (e) {
       console.warn('[eSIM-GO] countries direct failed → derive from bundles');
@@ -518,8 +526,11 @@ class EsimGoAPI {
           // нормализуем код к верхнему регистру
           .map(c => ({ ...c, code: c.code.toUpperCase() }));
 
-        // Исключаем RU
-        countriesList = countriesList.filter(c => (c.code || '').toUpperCase() !== 'RU');
+        // Исключаем RU и UA
+        countriesList = countriesList.filter(c => {
+          const code = (c.code || '').toUpperCase();
+          return code !== 'RU' && code !== 'UA';
+        });
 
         // Если список выглядит подозрительно маленьким — добавим ключевые страны явно
         const mustHave = [
@@ -634,10 +645,13 @@ class EsimGoAPI {
 
   // Получить пакеты для страны
   async getPackages(countryCode) {
-    // Временная блокировка выдачи по РФ (эквайринг)
-    if (countryCode && String(countryCode).toUpperCase() === 'RU') {
-      console.warn('[eSIM-GO] RU country requested — returning empty list');
-      return { esims: [] };
+    // Временная блокировка выдачи по РФ и Украине (эквайринг)
+    if (countryCode) {
+      const upperCode = String(countryCode).toUpperCase();
+      if (upperCode === 'RU' || upperCode === 'UA') {
+        console.warn('[eSIM-GO] Blocked country requested:', upperCode, '— returning empty list');
+        return { esims: [] };
+      }
     }
     // Если страна не указана — возвращаем региональные категории
     if (!countryCode) {
@@ -741,7 +755,10 @@ class EsimGoAPI {
           validity: p.duration || p.validity || p.days,
           country: countryIso,
           countryName: countryName, // сохраняем имя страны для countries list
-          coverage: p.countries?.map(c => c.iso) || p.coverage || [],
+          coverage: (p.countries?.map(c => c.iso) || p.coverage || []).filter(code => {
+            const upperCode = (code || '').toString().toUpperCase();
+            return upperCode !== 'RU' && upperCode !== 'UA';
+          }),
           originalPrice: p.price || p.amount || p.cost,
           price: parseFloat(((p.price || p.amount || p.cost) * this.marginMultiplier).toFixed(2)),
         };
@@ -825,7 +842,10 @@ class EsimGoAPI {
               validity: bundle.duration,
               country: countryIso,
               countryName: countryName,
-              coverage: bundle.countries?.map(c => c.iso) || [],
+              coverage: (bundle.countries?.map(c => c.iso) || []).filter(code => {
+                const upperCode = (code || '').toString().toUpperCase();
+                return upperCode !== 'RU' && upperCode !== 'UA';
+              }),
               originalPrice: bundle.price,
               price: parseFloat((bundle.price * this.marginMultiplier).toFixed(2)),
             };
