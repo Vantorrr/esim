@@ -37,3 +37,8 @@ SECRETS.md
 *.tsbuildinfo
 next-env.d.ts
 
+
+# 131 payment private key
+private-131.pem
+
+# 131 public key should be committed for hosting
