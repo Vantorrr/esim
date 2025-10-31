@@ -75,6 +75,9 @@ bot.onText(/\/start/, async (msg) => {
 5️⃣ Пользуйся интернетом по всему миру!
 
 Начни прямо сейчас! 👇
+
+—
+🧑‍💻 Разработка: [N0FACE](https://noface.digital) • [@pavel_xdev](https://t.me/pavel_xdev)
   `.trim();
 
   try {
@@ -108,6 +111,9 @@ bot.onText(/\/help/, (msg) => {
 
 *Если нужна помощь:*
 Напиши на email: ewavenet@yandex.com
+
+—
+🧑‍💻 Разработка: [N0FACE](https://noface.digital) • [@pavel_xdev](https://t.me/pavel_xdev)
   `.trim();
   
   bot.sendMessage(chatId, helpText, {
@@ -146,7 +152,9 @@ bot.on('callback_query', async (query) => {
         `*Q: Возможен возврат?*\n` +
         `A: Да, если eSIM не был активирован\n\n` +
         `*Не нашёл ответ?*\n` +
-        `Почта поддержки: ewavenet@yandex.com`,
+        `Почта поддержки: ewavenet@yandex.com\n\n` +
+        `—\n` +
+        `🧑‍💻 Разработка: [N0FACE](https://noface.digital) • [@pavel_xdev](https://t.me/pavel_xdev)`,
         { parse_mode: 'Markdown', ...mainMenu }
       );
       break;

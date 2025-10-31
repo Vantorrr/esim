@@ -169,6 +169,18 @@ export default function FAQPage() {
             </a>
           </div>
         </div>
+
+        {/* Development Attribution */}
+        <div className="bg-white rounded-2xl p-6 text-center border-2 border-primary/10">
+          <div className="text-2xl mb-2">🧑‍💻</div>
+          <h3 className="text-lg font-bold text-text-primary mb-2">Разработка</h3>
+          <p className="text-text-secondary mb-3">
+            Сервис разработан командой <a href="https://noface.digital" target="_blank" rel="noopener noreferrer" className="text-primary font-medium hover:underline">N0FACE</a>
+          </p>
+          <p className="text-sm text-text-secondary">
+            Руководитель проекта: <a href="https://t.me/pavel_xdev" target="_blank" rel="noopener noreferrer" className="text-primary font-medium hover:underline">@pavel_xdev</a>
+          </p>
+        </div>
       </div>
 
       <BottomNav />
