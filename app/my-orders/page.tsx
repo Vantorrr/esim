@@ -26,52 +26,29 @@ export default function MyOrdersPage() {
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive' | 'expired'>('all');
 
   useEffect(() => {
-    // TODO: Загрузить eSIM пользователя из API
-    // Пока показываем демо-данные
-    setTimeout(() => {
-      setEsims([
-        {
-          id: 'esim-001',
-          country: 'Турция',
-          countryCode: 'TR',
-          packageName: 'Merhaba • 3GB',
-          dataTotal: 3,
-          dataUsed: 2,
-          daysTotal: 7,
-          daysRemaining: 5,
-          status: 'active',
-          activatedAt: '2025-10-25',
-          expiresAt: '2025-11-01',
-        },
-        {
-          id: 'esim-002',
-          country: 'Весь мир',
-          countryCode: '🌍',
-          packageName: 'Global • Discover+ • 1GB',
-          dataTotal: 1,
-          dataUsed: 0.8,
-          daysTotal: 2,
-          daysRemaining: 1,
-          status: 'active',
-          activatedAt: '2025-10-30',
-          expiresAt: '2025-11-01',
-        },
-        {
-          id: 'esim-003',
-          country: 'США',
-          countryCode: 'US',
-          packageName: 'USA • 5GB',
-          dataTotal: 5,
-          dataUsed: 5,
-          daysTotal: 7,
-          daysRemaining: 0,
-          status: 'expired',
-          activatedAt: '2025-10-15',
-          expiresAt: '2025-10-22',
-        },
-      ]);
-      setLoading(false);
-    }, 800);
+    // Загружаем eSIM из localStorage
+    const loadESIMs = async () => {
+      try {
+        // Динамический импорт для избежания SSR проблем
+        const { getStoredESIMs, initDemoData } = await import('@/lib/esimStorage');
+        
+        let storedESIMs = getStoredESIMs();
+        
+        // Если нет данных, инициализируем демо-данные
+        if (storedESIMs.length === 0) {
+          initDemoData();
+          storedESIMs = getStoredESIMs();
+        }
+        
+        setEsims(storedESIMs);
+      } catch (error) {
+        console.error('Error loading eSIMs:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadESIMs();
   }, []);
 
   const filteredEsims = esims.filter((esim) => {

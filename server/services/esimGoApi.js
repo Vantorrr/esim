@@ -917,6 +917,51 @@ class EsimGoAPI {
     
     throw new Error('eSIM data not available yet');
   }
+
+  // Получить статус и остатки трафика eSIM
+  async getESIMStatus(iccid) {
+    try {
+      // API endpoint для получения статуса eSIM (может отличаться у провайдера)
+      const endpoint = `/v2.5/esims/${iccid}/usage`;
+      const data = await this.request(endpoint);
+      
+      return {
+        iccid: data.iccid || iccid,
+        status: data.status || 'unknown', // active, inactive, expired
+        dataTotal: data.dataTotal || 0, // в MB
+        dataUsed: data.dataUsed || 0, // в MB
+        dataRemaining: data.dataRemaining || 0, // в MB
+        validityDays: data.validityDays || 0,
+        daysRemaining: data.daysRemaining || 0,
+        activatedAt: data.activatedAt,
+        expiresAt: data.expiresAt,
+      };
+    } catch (error) {
+      console.error(`[eSIM-GO] Error getting eSIM status for ${iccid}:`, error.message);
+      // Возвращаем дефолтные данные при ошибке
+      return {
+        iccid,
+        status: 'unknown',
+        dataTotal: 0,
+        dataUsed: 0,
+        dataRemaining: 0,
+        validityDays: 0,
+        daysRemaining: 0,
+      };
+    }
+  }
+
+  // Получить все eSIM пользователя
+  async getUserESIMs(userId) {
+    try {
+      // TODO: Реализовать получение eSIM из БД по userId
+      // Пока возвращаем демо-данные
+      return [];
+    } catch (error) {
+      console.error(`[eSIM-GO] Error getting user eSIMs for ${userId}:`, error.message);
+      return [];
+    }
+  }
 }
 
 module.exports = new EsimGoAPI();
