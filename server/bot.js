@@ -68,38 +68,42 @@ bot.onText(/\/start/, async (msg) => {
 🔒 Безопасная оплата
 
 Начни прямо сейчас! 👇
-
-—
-🧑‍💻 Разработка: [N0FACE](https://noface.digital) • [@pavel_xdev](https://t.me/pavel_xdev)
   `.trim();
 
   try {
-    // Отправляем картинку с текстом
-    const imagePath = path.join(__dirname, '../public/bot-welcome.jpg');
+    // Отправляем картинку с текстом (по прямой ссылке для лучшего качества)
+    const imageUrl = 'https://i.ibb.co/prvs9YH6/photo-2025-10-10-08-43-01.jpg';
     
-    if (fs.existsSync(imagePath)) {
-      await bot.sendPhoto(chatId, imagePath, {
-        caption: welcomeText,
-        parse_mode: 'Markdown',
-        ...mainMenu
-      });
-    } else {
-      // Если картинки нет, отправляем только текст
-      await bot.sendMessage(chatId, welcomeText, {
-        parse_mode: 'Markdown',
-        ...mainMenu
-      });
-    }
+    await bot.sendPhoto(chatId, imageUrl, {
+      caption: welcomeText,
+      parse_mode: 'Markdown',
+      ...mainMenu
+    });
   } catch (error) {
-    console.error('Ошибка отправки:', error);
-    // Fallback на текст при ошибке
+    console.error('Ошибка отправки картинки:', error);
+    // Fallback: пробуем локальный файл
     try {
-      await bot.sendMessage(chatId, welcomeText, {
-        parse_mode: 'Markdown',
-        ...mainMenu
-      });
+      const imagePath = path.join(__dirname, '../public/bot-welcome.jpg');
+      if (fs.existsSync(imagePath)) {
+        await bot.sendPhoto(chatId, imagePath, {
+          caption: welcomeText,
+          parse_mode: 'Markdown',
+          ...mainMenu
+        });
+      } else {
+        // Если ничего не работает, отправляем только текст
+        await bot.sendMessage(chatId, welcomeText, {
+          parse_mode: 'Markdown',
+          ...mainMenu
+        });
+      }
     } catch (e) {
       console.error('Критическая ошибка:', e);
+      // Последняя попытка - просто текст
+      await bot.sendMessage(chatId, welcomeText, {
+        parse_mode: 'Markdown',
+        ...mainMenu
+      }).catch(err => console.error('Не удалось отправить даже текст:', err));
     }
   }
 });
