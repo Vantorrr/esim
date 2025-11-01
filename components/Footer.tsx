@@ -80,9 +80,19 @@ export default function Footer() {
               <li>
                 <Link href="/my-orders" className="text-text-secondary hover:text-primary transition-colors flex items-center gap-2">
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
-                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke="currentColor" strokeWidth="2"/>
+                    <rect x="7" y="2" width="10" height="20" rx="2" stroke="currentColor" strokeWidth="2"/>
+                    <path d="M12 18h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                   </svg>
-                  Мои заказы
+                  Мои eSIM
+                </Link>
+              </li>
+              <li>
+                <Link href="/purchase-history" className="text-text-secondary hover:text-primary transition-colors flex items-center gap-2">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="2"/>
+                    <polyline points="14,2 14,8 20,8" stroke="currentColor" strokeWidth="2"/>
+                  </svg>
+                  История покупок
                 </Link>
               </li>
             </ul>
