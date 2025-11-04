@@ -87,16 +87,16 @@ class EsimGoAPI {
     // Региональные пакеты с заданным порядком показа (чтобы Global не шли подряд)
     // Для регионов с longTerm: true будут показываться только пакеты на 60, 90, 180 дней
     const regions = [
-      { order: 1,  name: 'Global - Light',        nameRu: 'Весь мир – Лайт',        pattern: /global.*light/i,     icon: '🌍', longTerm: true },
-      { order: 2,  name: 'Europe + USA',          nameRu: 'Европа + США',           pattern: /europe.*usa|europe.*us[^a-z]/i, icon: '🇪🇺', longTerm: true },
-      { order: 3,  name: 'Middle East',           nameRu: 'Ближний Восток',          pattern: /middle.*east/i,      icon: '🕌', longTerm: true },
-      { order: 4,  name: 'Global - Standard',     nameRu: 'Весь мир – Стандарт',     pattern: /global.*standard/i,  icon: '🌍', longTerm: true },
-      { order: 5,  name: 'Asia',                  nameRu: 'Азия',                    pattern: /asia/i,              icon: '🌏', longTerm: true },
-      { order: 6,  name: 'Americas',              nameRu: 'Америка',                 pattern: /americas/i,          icon: '🌎', longTerm: true },
-      { order: 7,  name: 'Africa',                nameRu: 'Африка',                  pattern: /africa/i,            icon: '🌍', longTerm: true },
-      { order: 8,  name: 'Europe + Business Hubs',nameRu: 'Европа + Деловые центры', pattern: /europe.*business|business.*hub/i, icon: '🇪🇺', longTerm: true },
-      { order: 9,  name: 'South East Europe',     nameRu: 'Юго-Восточная Европа',    pattern: /south.*east.*europe/i, icon: '🇪🇺', longTerm: true },
-      { order: 10, name: 'Global - Max',          nameRu: 'Весь мир – Макс',         pattern: /global.*max/i,       icon: '🌍', longTerm: true },
+      { order: 1,  name: 'Global - Light',        nameRu: 'Весь мир – Лайт',        pattern: /global.*light/i,     icon: '🌍', longTerm: false },
+      { order: 2,  name: 'Europe + USA',          nameRu: 'Европа + США',           pattern: /europe.*usa|europe.*us[^a-z]/i, icon: '🇪🇺', longTerm: false },
+      { order: 3,  name: 'Middle East',           nameRu: 'Ближний Восток',          pattern: /middle.*east/i,      icon: '🕌', longTerm: false },
+      { order: 4,  name: 'Global - Standard',     nameRu: 'Весь мир – Стандарт',     pattern: /global.*standard/i,  icon: '🌍', longTerm: false },
+      { order: 5,  name: 'Asia',                  nameRu: 'Азия',                    pattern: /asia/i,              icon: '🌏', longTerm: false },
+      { order: 6,  name: 'Americas',              nameRu: 'Америка',                 pattern: /americas/i,          icon: '🌎', longTerm: false },
+      { order: 7,  name: 'Africa',                nameRu: 'Африка',                  pattern: /africa/i,            icon: '🌍', longTerm: false },
+      { order: 8,  name: 'Europe + Business Hubs',nameRu: 'Европа + Деловые центры', pattern: /europe.*business|business.*hub/i, icon: '🇪🇺', longTerm: false },
+      { order: 9,  name: 'South East Europe',     nameRu: 'Юго-Восточная Европа',    pattern: /south.*east.*europe/i, icon: '🇪🇺', longTerm: false },
+      { order: 10, name: 'Global - Max',          nameRu: 'Весь мир – Макс',         pattern: /global.*max/i,       icon: '🌍', longTerm: false },
     ];
 
     const categories = [];
@@ -588,18 +588,18 @@ class EsimGoAPI {
       return { esims: [] };
     }
     
-    // Маппинг slug → паттерн для поиска (все долгосрочные регионы отмечены)
+    // Маппинг slug → паттерн для поиска (longTerm: false показывает все пакеты)
     const regionPatterns = {
-      'global-light': { pattern: /global.*light/i, longTerm: true },
-      'global-standard': { pattern: /global.*standard/i, longTerm: true },
-      'global-max': { pattern: /global.*max/i, longTerm: true },
-      'europe-usa': { pattern: /europe.*usa|europe.*us[^a-z]/i, longTerm: true },
-      'south-east-europe': { pattern: /south.*east.*europe/i, longTerm: true },
-      'middle-east': { pattern: /middle.*east/i, longTerm: true },
-      'europe-business-hubs': { pattern: /europe.*business|business.*hub/i, longTerm: true },
-      'americas': { pattern: /americas/i, longTerm: true },
-      'africa': { pattern: /africa/i, longTerm: true },
-      'asia': { pattern: /asia/i, longTerm: true },
+      'global-light': { pattern: /global.*light/i, longTerm: false },
+      'global-standard': { pattern: /global.*standard/i, longTerm: false },
+      'global-max': { pattern: /global.*max/i, longTerm: false },
+      'europe-usa': { pattern: /europe.*usa|europe.*us[^a-z]/i, longTerm: false },
+      'south-east-europe': { pattern: /south.*east.*europe/i, longTerm: false },
+      'middle-east': { pattern: /middle.*east/i, longTerm: false },
+      'europe-business-hubs': { pattern: /europe.*business|business.*hub/i, longTerm: false },
+      'americas': { pattern: /americas/i, longTerm: false },
+      'africa': { pattern: /africa/i, longTerm: false },
+      'asia': { pattern: /asia/i, longTerm: false },
     };
     
     const regionConfig = regionPatterns[regionSlug];
