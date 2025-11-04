@@ -24,31 +24,36 @@ export default function MyOrdersPage() {
   const [esims, setEsims] = useState<ESIMData[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive' | 'expired'>('all');
+  const [activeTab, setActiveTab] = useState<'esims' | 'history'>('esims');
+  const [purchases, setPurchases] = useState<any[]>([]);
 
   useEffect(() => {
-    // Загружаем eSIM из localStorage
-    const loadESIMs = async () => {
+    // Загружаем eSIM и историю покупок из localStorage
+    const loadData = async () => {
       try {
         // Динамический импорт для избежания SSR проблем
-        const { getStoredESIMs, initDemoData } = await import('@/lib/esimStorage');
+        const { getStoredESIMs, getStoredPurchases, initDemoData } = await import('@/lib/esimStorage');
         
         let storedESIMs = getStoredESIMs();
+        let storedPurchases = getStoredPurchases();
         
         // Если нет данных, инициализируем демо-данные
         if (storedESIMs.length === 0) {
           initDemoData();
           storedESIMs = getStoredESIMs();
+          storedPurchases = getStoredPurchases();
         }
         
         setEsims(storedESIMs);
+        setPurchases(storedPurchases);
       } catch (error) {
-        console.error('Error loading eSIMs:', error);
+        console.error('Error loading data:', error);
       } finally {
         setLoading(false);
       }
     };
     
-    loadESIMs();
+    loadData();
   }, []);
 
   const filteredEsims = esims.filter((esim) => {
@@ -98,8 +103,47 @@ export default function MyOrdersPage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6">
-        {/* Фильтры */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
+        {/* Вкладки: Активные eSIM / История покупок */}
+        <div className="flex gap-3 mb-6">
+          <button
+            onClick={() => setActiveTab('esims')}
+            className={`flex-1 py-3 px-4 rounded-xl font-bold text-base transition-all ${
+              activeTab === 'esims'
+                ? 'bg-gradient-primary text-white shadow-lg'
+                : 'bg-white text-text-secondary border-2 border-gray-200 hover:border-primary/30'
+            }`}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                <rect x="7" y="2" width="10" height="20" rx="2" stroke="currentColor" strokeWidth="2"/>
+                <path d="M12 18h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+              Активные eSIM
+            </div>
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`flex-1 py-3 px-4 rounded-xl font-bold text-base transition-all ${
+              activeTab === 'history'
+                ? 'bg-gradient-primary text-white shadow-lg'
+                : 'bg-white text-text-secondary border-2 border-gray-200 hover:border-primary/30'
+            }`}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="2"/>
+                <polyline points="14,2 14,8 20,8" stroke="currentColor" strokeWidth="2"/>
+              </svg>
+              История покупок
+            </div>
+          </button>
+        </div>
+
+        {/* Контент для вкладки "Активные eSIM" */}
+        {activeTab === 'esims' && (
+          <>
+            {/* Фильтры */}
+            <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
           <button
             onClick={() => setFilter('all')}
             className={`px-4 py-2 rounded-xl font-medium whitespace-nowrap transition-all ${
@@ -171,6 +215,108 @@ export default function MyOrdersPage() {
             {filteredEsims.map((esim) => (
               <ESIMCard key={esim.id} {...esim} />
             ))}
+          </div>
+        )}
+          </>
+        )}
+
+        {/* Контент для вкладки "История покупок" */}
+        {activeTab === 'history' && (
+          <div className="space-y-4">
+            {purchases.length === 0 ? (
+              <div className="bg-white rounded-2xl p-12 text-center">
+                <div className="w-24 h-24 mx-auto mb-6 bg-background rounded-full flex items-center justify-center">
+                  <svg className="w-12 h-12 text-text-secondary" viewBox="0 0 24 24" fill="none">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="2"/>
+                    <polyline points="14,2 14,8 20,8" stroke="currentColor" strokeWidth="2"/>
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-text-primary mb-2">
+                  Нет покупок
+                </h2>
+                <p className="text-text-secondary mb-6">
+                  У вас пока нет истории покупок
+                </p>
+                <button
+                  onClick={() => router.push('/')}
+                  className="px-6 py-3 bg-gradient-primary text-white rounded-xl font-medium hover:opacity-90 transition-opacity shadow-md"
+                >
+                  Купить первый eSIM
+                </button>
+              </div>
+            ) : (
+              purchases.map((purchase) => {
+                const getFlagEmoji = (code: string) => {
+                  if (code === '🌍') return code;
+                  const codePoints = code
+                    .toUpperCase()
+                    .split('')
+                    .map(char => 127397 + char.charCodeAt(0));
+                  return String.fromCodePoint(...codePoints);
+                };
+
+                return (
+                  <div key={purchase.id} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-start gap-3">
+                        <div className="text-3xl">{getFlagEmoji(purchase.countryCode)}</div>
+                        <div>
+                          <h3 className="font-bold text-text-primary text-lg leading-tight">
+                            {purchase.country}
+                          </h3>
+                          <p className="text-text-secondary text-sm">{purchase.packageName}</p>
+                          <p className="text-text-secondary text-xs mt-1">
+                            {new Date(purchase.date).toLocaleDateString('ru-RU', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xl font-bold text-text-primary">
+                          {purchase.price} {purchase.currency === 'RUB' ? '₽' : purchase.currency}
+                        </div>
+                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium mt-2 ${
+                          purchase.status === 'completed' ? 'bg-green-100 text-green-700' :
+                          purchase.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          {purchase.status === 'completed' ? 'Завершён' : purchase.status === 'pending' ? 'В обработке' : 'Отменён'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                      <div className="flex items-center gap-2 text-sm text-text-secondary">
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                          <rect x="1" y="4" width="22" height="16" rx="2" stroke="currentColor" strokeWidth="2"/>
+                          <line x1="1" y1="10" x2="23" y2="10" stroke="currentColor" strokeWidth="2"/>
+                        </svg>
+                        {purchase.paymentMethod}
+                      </div>
+                      
+                      {purchase.status === 'completed' && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => alert('Скачивание чека...')}
+                            className="px-4 py-2 bg-background text-text-primary rounded-xl text-sm font-medium hover:bg-gray-100 transition-colors flex items-center gap-2"
+                          >
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            Чек
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         )}
       </div>
