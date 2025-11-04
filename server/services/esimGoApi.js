@@ -85,17 +85,18 @@ class EsimGoAPI {
     console.log('[eSIM-GO] getRegionalCategories called with', packages.length, 'packages');
     
     // Региональные пакеты с заданным порядком показа (чтобы Global не шли подряд)
+    // Для регионов с longTerm: true будут показываться только пакеты на 60, 90, 180 дней
     const regions = [
-      { order: 1,  name: 'Global - Light',        nameRu: 'Весь мир – Лайт',        pattern: /global.*light/i,     icon: '🌍' },
-      { order: 2,  name: 'Europe + USA',          nameRu: 'Европа + США',           pattern: /europe.*usa|europe.*us[^a-z]/i, icon: '🇪🇺' },
-      { order: 3,  name: 'Middle East',           nameRu: 'Ближний Восток',          pattern: /middle.*east/i,      icon: '🕌' },
-      { order: 4,  name: 'Global - Standard',     nameRu: 'Весь мир – Стандарт',     pattern: /global.*standard/i,  icon: '🌍' },
-      { order: 5,  name: 'Asia',                  nameRu: 'Азия',                    pattern: /asia/i,              icon: '🌏' },
-      { order: 6,  name: 'Americas',              nameRu: 'Америка',                 pattern: /americas/i,          icon: '🌎' },
-      { order: 7,  name: 'Africa',                nameRu: 'Африка',                  pattern: /africa/i,            icon: '🌍' },
-      { order: 8,  name: 'Europe + Business Hubs',nameRu: 'Европа + Деловые центры', pattern: /europe.*business|business.*hub/i, icon: '🇪🇺' },
-      { order: 9,  name: 'South East Europe',     nameRu: 'Юго-Восточная Европа',    pattern: /south.*east.*europe/i, icon: '🇪🇺' },
-      { order: 10, name: 'Global - Max',          nameRu: 'Весь мир – Макс',         pattern: /global.*max/i,       icon: '🌍' },
+      { order: 1,  name: 'Global - Light',        nameRu: 'Весь мир – Лайт',        pattern: /global.*light/i,     icon: '🌍', longTerm: true },
+      { order: 2,  name: 'Europe + USA',          nameRu: 'Европа + США',           pattern: /europe.*usa|europe.*us[^a-z]/i, icon: '🇪🇺', longTerm: true },
+      { order: 3,  name: 'Middle East',           nameRu: 'Ближний Восток',          pattern: /middle.*east/i,      icon: '🕌', longTerm: true },
+      { order: 4,  name: 'Global - Standard',     nameRu: 'Весь мир – Стандарт',     pattern: /global.*standard/i,  icon: '🌍', longTerm: true },
+      { order: 5,  name: 'Asia',                  nameRu: 'Азия',                    pattern: /asia/i,              icon: '🌏', longTerm: true },
+      { order: 6,  name: 'Americas',              nameRu: 'Америка',                 pattern: /americas/i,          icon: '🌎', longTerm: true },
+      { order: 7,  name: 'Africa',                nameRu: 'Африка',                  pattern: /africa/i,            icon: '🌍', longTerm: true },
+      { order: 8,  name: 'Europe + Business Hubs',nameRu: 'Европа + Деловые центры', pattern: /europe.*business|business.*hub/i, icon: '🇪🇺', longTerm: true },
+      { order: 9,  name: 'South East Europe',     nameRu: 'Юго-Восточная Европа',    pattern: /south.*east.*europe/i, icon: '🇪🇺', longTerm: true },
+      { order: 10, name: 'Global - Max',          nameRu: 'Весь мир – Макс',         pattern: /global.*max/i,       icon: '🌍', longTerm: true },
     ];
 
     const categories = [];
@@ -103,7 +104,17 @@ class EsimGoAPI {
     for (const region of regions) {
       try {
         // Ищем по паттерну в названии (description)
-        const regionPackages = packages.filter(p => p && p.name && region.pattern.test(p.name));
+        let regionPackages = packages.filter(p => p && p.name && region.pattern.test(p.name));
+        
+        // Если это долгосрочный регион, оставляем только пакеты на 60, 90, 180 дней
+        if (region.longTerm) {
+          const longTermDays = [60, 90, 180];
+          regionPackages = regionPackages.filter(p => {
+            const validity = parseInt(p.validity);
+            return !isNaN(validity) && longTermDays.includes(validity);
+          });
+          console.log(`[eSIM-GO] Long-term region "${region.nameRu}": filtered to ${regionPackages.length} packages (60/90/180 days only)`);
+        }
         
         console.log(`[eSIM-GO] Checking region "${region.nameRu}": found ${regionPackages.length} packages`);
         if (regionPackages.length > 0 && regionPackages[0].coverage) {
@@ -577,29 +588,42 @@ class EsimGoAPI {
       return { esims: [] };
     }
     
-    // Маппинг slug → паттерн для поиска
+    // Маппинг slug → паттерн для поиска (все долгосрочные регионы отмечены)
     const regionPatterns = {
-      'global-light': /global.*light/i,
-      'global-standard': /global.*standard/i,
-      'global-max': /global.*max/i,
-      'europe-usa': /europe.*usa|europe.*us[^a-z]/i,
-      'south-east-europe': /south.*east.*europe/i,
-      'middle-east': /middle.*east/i,
-      'europe-business-hubs': /europe.*business|business.*hub/i,
-      'americas': /americas/i,
-      'africa': /africa/i,
-      'asia': /asia/i,
+      'global-light': { pattern: /global.*light/i, longTerm: true },
+      'global-standard': { pattern: /global.*standard/i, longTerm: true },
+      'global-max': { pattern: /global.*max/i, longTerm: true },
+      'europe-usa': { pattern: /europe.*usa|europe.*us[^a-z]/i, longTerm: true },
+      'south-east-europe': { pattern: /south.*east.*europe/i, longTerm: true },
+      'middle-east': { pattern: /middle.*east/i, longTerm: true },
+      'europe-business-hubs': { pattern: /europe.*business|business.*hub/i, longTerm: true },
+      'americas': { pattern: /americas/i, longTerm: true },
+      'africa': { pattern: /africa/i, longTerm: true },
+      'asia': { pattern: /asia/i, longTerm: true },
     };
     
-    const pattern = regionPatterns[regionSlug];
-    if (!pattern) {
+    const regionConfig = regionPatterns[regionSlug];
+    if (!regionConfig) {
       console.warn('[eSIM-GO] Unknown region slug:', regionSlug, '| Available:', Object.keys(regionPatterns).join(', '));
       return { esims: [] };
     }
     
+    const pattern = regionConfig.pattern;
+    
     // Фильтруем пакеты по паттерну
     let regionPackages = this.allPackagesCache.filter(p => p && p.name && pattern.test(p.name));
     console.log('[eSIM-GO] Found', regionPackages.length, 'packages matching pattern for', regionSlug);
+    
+    // Если это долгосрочный регион, оставляем только пакеты на 60, 90, 180 дней
+    if (regionConfig.longTerm) {
+      const longTermDays = [60, 90, 180];
+      const beforeFilter = regionPackages.length;
+      regionPackages = regionPackages.filter(p => {
+        const validity = parseInt(p.validity);
+        return !isNaN(validity) && longTermDays.includes(validity);
+      });
+      console.log(`[eSIM-GO] Long-term region ${regionSlug}: filtered from ${beforeFilter} to ${regionPackages.length} packages (60/90/180 days only)`);
+    }
 
     // Middle East: исключаем Africa и при отсутствии результатов используем статическое покрытие
     if (regionSlug === 'middle-east') {
