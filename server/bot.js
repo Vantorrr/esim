@@ -72,7 +72,7 @@ bot.onText(/\/start/, async (msg) => {
 
   try {
     // Отправляем картинку с текстом (по прямой ссылке для лучшего качества)
-    const imageUrl = 'https://i.ibb.co/mFCYMfnr/photo-2025-10-10-08-43-01.jpg';
+    const imageUrl = 'https://i.ibb.co/0jYrfStZ/IMAGE-2025-11-05-10-30-23.jpg';
     
     await bot.sendPhoto(chatId, imageUrl, {
       caption: welcomeText,
