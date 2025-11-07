@@ -2,13 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import {
-  getPackageDetails,
-  createStripeSession,
-  createYooKassaPayment,
-  createTinkoffPayment,
-  createPayment131SBP,
-} from '@/lib/api';
+import { getPackageDetails, createPayment131SBP } from '@/lib/api';
 import { hapticFeedback, showBackButton, hideBackButton } from '@/lib/telegram';
 import LoadingScreen from '@/components/LoadingScreen';
 import CoverageModal from '@/components/CoverageModal';
@@ -21,7 +15,6 @@ function CheckoutContent() {
   const [pkg, setPkg] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'yookassa' | 'tinkoff' | 'sbp131'>('tinkoff');
   const [coverageOpen, setCoverageOpen] = useState(false);
 
   useEffect(() => {
@@ -61,81 +54,43 @@ function CheckoutContent() {
     hapticFeedback('medium');
 
     try {
-      if (paymentMethod === 'stripe') {
-        const session = await createStripeSession({
+      const amountRub = pkg.priceRub || Math.round(pkg.price * 95);
+      const orderId = `esim_${Date.now()}`;
+      const successUrl = `${window.location.origin}/success?order=${orderId}`;
+      const failUrl = `${window.location.origin}/checkout?package=${pkg.id}&status=payment_failed`;
+
+      const payment = await createPayment131SBP({
+        amount: amountRub,
+        currency: 'RUB',
+        orderId,
+        description: `eSIM ${pkg.name}`,
+        successUrl,
+        failUrl,
+        metadata: {
           packageId: pkg.id,
           packageName: pkg.name,
-          price: pkg.price,
-          currency: 'usd',
-        });
+          region: pkg.region,
+        },
+      });
 
-        // Открываем Stripe Checkout
-        if (session.url) {
-          window.location.href = session.url;
-        }
-      } else if (paymentMethod === 'tinkoff') {
-        const payment = await createTinkoffPayment({
-          packageId: pkg.id,
-          packageName: pkg.name,
-          price: pkg.price * 90, // Конвертируем в рубли (примерный курс)
-          email: 'customer@email.com',
-        });
+      const redirectUrl =
+        payment?.paymentUrl ||
+        payment?.url ||
+        payment?.deeplink ||
+        payment?.link ||
+        payment?.sbpUrl ||
+        payment?.formUrl ||
+        payment?.invoice?.url ||
+        payment?.payload?.formUrl ||
+        payment?.redirect?.url;
 
-        // Открываем страницу оплаты Т-Банк
-        if (payment.paymentUrl) {
-          window.location.href = payment.paymentUrl;
-        }
-      } else if (paymentMethod === 'sbp131') {
-        const amountRub = pkg.priceRub || Math.round(pkg.price * 95);
-        const orderId = `esim_${Date.now()}`;
-        const successUrl = `${window.location.origin}/success?order=${orderId}`;
-        const failUrl = `${window.location.origin}/checkout?package=${pkg.id}&status=payment_failed`;
-
-        const payment = await createPayment131SBP({
-          amount: amountRub,
-          currency: 'RUB',
-          orderId,
-          description: `eSIM ${pkg.name}`,
-          successUrl,
-          failUrl,
-          metadata: {
-            packageId: pkg.id,
-            packageName: pkg.name,
-            region: pkg.region,
-          },
-        });
-
-        const redirectUrl =
-          payment?.paymentUrl ||
-          payment?.url ||
-          payment?.deeplink ||
-          payment?.link ||
-          payment?.sbpUrl ||
-          payment?.formUrl ||
-          payment?.invoice?.url ||
-          payment?.payload?.formUrl ||
-          payment?.redirect?.url;
-
-        if (redirectUrl) {
-          window.location.href = redirectUrl;
-        } else if (payment?.qr?.link) {
-          window.location.href = payment.qr.link;
-        } else {
-          console.warn('SBP payment response missing redirect URL', payment);
-          alert('Не удалось получить ссылку на оплату СБП. Свяжитесь с поддержкой.');
-        }
+      if (redirectUrl) {
+        window.location.href = redirectUrl;
+      } else if (payment?.qr?.link) {
+        window.location.href = payment.qr.link;
       } else {
-        const payment = await createYooKassaPayment({
-          packageId: pkg.id,
-          packageName: pkg.name,
-          price: pkg.price,
-          currency: 'RUB',
-        });
-
-        // Открываем YooKassa
-        if (payment.confirmation?.confirmation_url) {
-          window.location.href = payment.confirmation.confirmation_url;
-        }
+        console.warn('SBP payment response missing redirect URL', payment);
+        alert('Не удалось получить ссылку на оплату СБП. Свяжитесь с поддержкой.');
       }
     } catch (error) {
       console.error('Payment error:', error);
@@ -337,119 +292,21 @@ function CheckoutContent() {
                 <line x1="2" y1="10" x2="22" y2="10" stroke="currentColor" strokeWidth="2"/>
               </svg>
             </div>
-            <h2 className="text-xl font-bold text-text-primary">Способ оплаты</h2>
+            <h2 className="text-xl font-bold text-text-primary">Оплата через СБП</h2>
           </div>
-          
-          <div className="space-y-3">
-            <button
-              onClick={() => {
-                setPaymentMethod('stripe');
-                hapticFeedback('light');
-              }}
-              className={`w-full p-4 rounded-xl border-2 transition-all ${
-                paymentMethod === 'stripe'
-                  ? 'border-primary bg-primary/5'
-                  : 'border-gray-200 hover:border-primary/30'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none">
-                    <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2"/>
-                    <line x1="2" y1="10" x2="22" y2="10" stroke="currentColor" strokeWidth="2"/>
-                  </svg>
-                </div>
-                <div className="flex-1 text-left">
-                  <div className="font-medium text-text-primary">Stripe</div>
-                  <div className="text-sm text-text-secondary">Карты, Apple Pay, Google Pay</div>
-                </div>
-                {paymentMethod === 'stripe' && (
-                  <div className="text-primary text-xl">✓</div>
-                )}
-              </div>
-            </button>
 
-            <button
-              onClick={() => {
-                setPaymentMethod('tinkoff');
-                hapticFeedback('light');
-              }}
-              className={`w-full p-4 rounded-xl border-2 transition-all ${
-                paymentMethod === 'tinkoff'
-                  ? 'border-primary bg-primary/5'
-                  : 'border-gray-200 hover:border-primary/30'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-secondary rounded-xl flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 1 0 0 7h5a3.5 3.5 0 1 1 0 7H6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
-                </div>
-                <div className="flex-1 text-left">
-                  <div className="font-medium text-text-primary">Т-Банк</div>
-                  <div className="text-sm text-text-secondary">Карты РФ, СБП, рассрочка</div>
-                </div>
-                {paymentMethod === 'tinkoff' && (
-                  <div className="text-primary text-xl">✓</div>
-                )}
+          <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-secondary rounded-xl flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none">
+                  <path d="M4 12h16M12 4v16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
               </div>
-            </button>
-
-            <button
-              onClick={() => {
-                setPaymentMethod('sbp131');
-                hapticFeedback('light');
-              }}
-              className={`w-full p-4 rounded-xl border-2 transition-all ${
-                paymentMethod === 'sbp131'
-                  ? 'border-primary bg-primary/5'
-                  : 'border-gray-200 hover:border-primary/30'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-secondary rounded-xl flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none">
-                    <path d="M4 12h16M12 4v16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  </svg>
-                </div>
-                <div className="flex-1 text-left">
-                  <div className="font-medium text-text-primary">СБП (131)</div>
-                  <div className="text-sm text-text-secondary">Оплата через СБП, перевод по QR или ссылке</div>
-                </div>
-                {paymentMethod === 'sbp131' && (
-                  <div className="text-primary text-xl">✓</div>
-                )}
+              <div className="flex-1 text-left">
+                <div className="font-medium text-text-primary">Банк 131</div>
+                <div className="text-sm text-text-secondary">Оплата по QR или ссылке через Систему быстрых платежей</div>
               </div>
-            </button>
-
-            <button
-              onClick={() => {
-                setPaymentMethod('yookassa');
-                hapticFeedback('light');
-              }}
-              className={`w-full p-4 rounded-xl border-2 transition-all ${
-                paymentMethod === 'yookassa'
-                  ? 'border-primary bg-primary/5'
-                  : 'border-gray-200 hover:border-primary/30'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-secondary rounded-xl flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                    <path d="M12 8v8M8 12h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
-                </div>
-                <div className="flex-1 text-left">
-                  <div className="font-medium text-text-primary">ЮKassa</div>
-                  <div className="text-sm text-text-secondary">Карты РФ, СБП, кошельки</div>
-                </div>
-                {paymentMethod === 'yookassa' && (
-                  <div className="text-primary text-xl">✓</div>
-                )}
-              </div>
-            </button>
+            </div>
           </div>
         </div>
 

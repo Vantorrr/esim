@@ -45,42 +45,6 @@ export const getOrderQR = async (orderId: string) => {
 };
 
 // Payment
-export const createStripeSession = async (packageData: {
-  packageId: string;
-  packageName: string;
-  price: number;
-  currency?: string;
-}) => {
-  const response = await api.post('/payment/stripe/create-session', packageData);
-  return response.data;
-};
-
-export const createYooKassaPayment = async (packageData: {
-  packageId: string;
-  packageName: string;
-  price: number;
-  currency?: string;
-}) => {
-  const response = await api.post('/payment/yookassa/create-payment', packageData);
-  return response.data;
-};
-
-// Tinkoff (T-Bank)
-export const createTinkoffPayment = async (packageData: {
-  packageId: string;
-  packageName: string;
-  price: number;
-  email?: string;
-}) => {
-  const response = await api.post('/tinkoff/create-payment', packageData);
-  return response.data;
-};
-
-export const getTinkoffPaymentStatus = async (paymentId: string) => {
-  const response = await api.get(`/tinkoff/payment/${paymentId}`);
-  return response.data;
-};
-
 export const createPayment131SBP = async (payload: {
   amount: number | string;
   currency?: string;

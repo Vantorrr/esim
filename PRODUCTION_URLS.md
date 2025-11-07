@@ -30,20 +30,13 @@ curl https://esim-production.up.railway.app/api/esim/packages/PACKAGE_ID
 
 ### Payment API:
 ```bash
-# Создать платёж Т-Банк
-curl -X POST https://esim-production.up.railway.app/api/tinkoff/create-payment \
-  -H "Content-Type: application/json" \
-  -d '{"packageId":"test","packageName":"Test","price":1000}'
-
-# Создать Stripe сессию
-curl -X POST https://esim-production.up.railway.app/api/payment/stripe/create-session \
-  -H "Content-Type: application/json" \
-  -d '{"packageId":"test","packageName":"Test","price":10}'
-
 # Создать платёж СБП (131)
 curl -X POST https://esim-production.up.railway.app/api/payments/131/sbp/create-payment \
   -H "Content-Type: application/json" \
   -d '{"amount":1000,"currency":"RUB","orderId":"test_order"}'
+
+# Проверить статус платежа
+curl https://esim-production.up.railway.app/api/payments/131/sbp/orders/test_order
 ```
 
 ---
@@ -60,34 +53,6 @@ https://esim-production.up.railway.app/api/webhook/esim-go
 2. API Details → Callback URL
 3. Вставь URL выше
 4. Save Changes
-
-### Т-Банк ЛК:
-```
-https://esim-production.up.railway.app/api/tinkoff/notification
-```
-
-**Настройка:**
-1. Личный кабинет Т-Банка
-2. Терминалы → URL уведомлений
-3. Вставь URL выше
-4. Сохранить
-
-### Stripe Dashboard:
-```
-https://esim-production.up.railway.app/api/webhook/stripe
-```
-
-**Настройка:**
-1. dashboard.stripe.com → Developers → Webhooks
-2. Add endpoint
-3. URL: вставь выше
-4. Events: `checkout.session.completed`
-5. Add endpoint
-
-### YooKassa:
-```
-https://esim-production.up.railway.app/api/webhook/yookassa
-```
 
 ### 131 (СБП):
 ```

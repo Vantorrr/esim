@@ -278,20 +278,21 @@ fetch('http://localhost:8080/api/payment/stripe/create-session', {
 - `payment_intent.succeeded`
 - `payment_intent.payment_failed`
 
-#### POST /api/webhook/yookassa
+#### POST /api/payments/131/webhook
 
-Принимает уведомления от YooKassa
+Принимает уведомления от Банка 131 по СБП
 
-**События:**
-- `payment.succeeded`
-- `payment.canceled`
+**Типовые события:**
+- `ready_to_confirm`
+- `payment_finished`
+- `action_required`
 
 ## Frontend API Client
 
 ### Использование в компонентах
 
 \`\`\`typescript
-import { getCountries, getPackages, createStripeSession } from '@/lib/api';
+import { getCountries, getPackages, createPayment131SBP } from '@/lib/api';
 
 // Получить страны
 const countries = await getCountries();
@@ -299,16 +300,20 @@ const countries = await getCountries();
 // Получить пакеты
 const packages = await getPackages('US');
 
-// Создать платёж
-const session = await createStripeSession({
-  packageId: 'esim_123',
-  packageName: 'USA 5GB',
-  price: 15.99,
-  currency: 'usd'
+// Создать платёж через СБП
+const payment = await createPayment131SBP({
+  amount: 1990,
+  currency: 'RUB',
+  orderId: 'esim_123',
+  description: 'USA 5GB / 30 дней',
+  successUrl: `${window.location.origin}/success?order=esim_123`,
+  failUrl: `${window.location.origin}/checkout?package=esim_123&status=failed`,
 });
 
-// Перенаправить на оплату
-window.location.href = session.url;
+// Перенаправить на оплату (ссылка или QR)
+if (payment.url) {
+  window.location.href = payment.url;
+}
 \`\`\`
 
 ## Telegram Mini Apps API
@@ -392,31 +397,22 @@ try {
 
 \`\`\`typescript
 try {
-  const session = await createStripeSession({...});
-  window.location.href = session.url;
+  const payment = await createPayment131SBP({ amount: 1990, orderId: 'esim_123' });
+  window.location.href = payment.url;
 } catch (error) {
-  alert('Ошибка при создании платежа: ' + error.message);
+  alert('Ошибка при создании платежа СБП: ' + error.message);
 }
 \`\`\`
 
 ## Тестовые данные
 
-### Stripe Test Cards
+### Тестирование СБП
 
-\`\`\`
-Успешная оплата:
-4242 4242 4242 4242
-
-Требуется 3D Secure:
-4000 0027 6000 3184
-
-Отклонена:
-4000 0000 0000 0002
-\`\`\`
-
-**CVC:** любые 3 цифры  
-**Дата:** любая будущая дата  
-**Почта:** любой email
+```
+- Используйте тестовую среду Банка 131 или sandbox-ссылку, выданную менеджером
+- Проверьте сценарии: успешная оплата, пользователь отменил, ожидание подтверждения
+- Для боевой среды можно провести реальный платёж на минимальную сумму и оформить возврат
+```
 
 ### esim-go Test Mode
 

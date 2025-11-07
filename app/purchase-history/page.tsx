@@ -39,7 +39,7 @@ export default function PurchaseHistoryPage() {
           currency: 'RUB',
           date: '2025-10-25T12:00:00Z',
           status: 'completed',
-          paymentMethod: 'Т-Банк',
+          paymentMethod: 'СБП (Банк 131)',
           receiptUrl: '/api/receipts/order-001.pdf',
         },
         {
@@ -52,7 +52,7 @@ export default function PurchaseHistoryPage() {
           currency: 'RUB',
           date: '2025-10-30T15:30:00Z',
           status: 'completed',
-          paymentMethod: 'ЮKassa',
+          paymentMethod: 'СБП (Банк 131)',
           receiptUrl: '/api/receipts/order-002.pdf',
         },
         {
@@ -65,7 +65,7 @@ export default function PurchaseHistoryPage() {
           currency: 'RUB',
           date: '2025-10-15T10:00:00Z',
           status: 'completed',
-          paymentMethod: 'Stripe',
+          paymentMethod: 'СБП (Банк 131)',
           receiptUrl: '/api/receipts/order-003.pdf',
         },
       ]);

@@ -2,10 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const esimRoutes = require('./routes/esim');
-const paymentRoutes = require('./routes/payment');
 const payments131Routes = require('./routes/payments131');
 const webhookRoutes = require('./routes/webhook');
-const tinkoffRoutes = require('./routes/tinkoff');
 const esimGoWebhookRoutes = require('./routes/esimGoWebhook');
 const botRoutes = require('./routes/bot');
 const esimGoApi = require('./services/esimGoApi');
@@ -33,11 +31,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/esim', esimRoutes);
-app.use('/api/payment', paymentRoutes);
 app.use('/api/payments/131', payments131Routes);
 app.use('/api/webhook', webhookRoutes);
 app.use('/api/webhook', esimGoWebhookRoutes);
-app.use('/api/tinkoff', tinkoffRoutes);
 app.use('/api/bot', botRoutes);
 
 // Health check

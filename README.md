@@ -6,7 +6,7 @@
 
 - 🌍 **200+ стран** - покрытие по всему миру
 - ⚡ **Мгновенная активация** - получите eSIM за 1 минуту
-- 💳 **Удобная оплата** - Stripe, Т-Банк, YooKassa и 131 (СБП)
+- 💳 **Удобная оплата** - СБП через Банк 131
 - 📱 **QR-код** - простая установка через сканирование
 - 🎨 **Современный UI** - красивый интерфейс с градиентами
 - 🌐 **Мультиязычность** - поддержка RU/EN
@@ -23,9 +23,6 @@
 ### Backend
 - **Node.js + Express** - API сервер
 - **esim-go API** - провайдер eSIM
-- **Stripe** - международные платежи
-- **Т-Банк (Tinkoff)** - платежи РФ, СБП, рассрочка
-- **YooKassa** - платежи РФ
 - **131.ru FPS** - приём платежей через СБП
 
 ## 🚀 Быстрый старт
@@ -47,14 +44,6 @@ TELEGRAM_BOT_TOKEN=your_bot_token_here
 # eSIM-GO API
 ESIM_GO_API_KEY=your_esim_go_api_key
 ESIM_GO_API_URL=https://api.esim-go.com/v2.2
-
-# Payment Systems
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_PUBLISHABLE_KEY=pk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-
-YOOKASSA_SHOP_ID=your_shop_id
-YOOKASSA_SECRET_KEY=your_secret_key
 
 # 131.ru FPS (СБП)
 PAYMENT_131_BASE_URL=https://api.131.ru
@@ -78,23 +67,6 @@ WEBHOOK_URL=https://your-domain.com/api/webhook
 2. Перейдите в раздел API
 3. Создайте новый API ключ
 4. Скопируйте ключ в `.env`
-
-#### Stripe
-1. Создайте аккаунт на https://stripe.com
-2. Перейдите в Developers → API keys
-3. Скопируйте Secret key и Publishable key
-4. Настройте webhook endpoint для получения событий
-
-#### Т-Банк (Tinkoff)
-1. Подключите эквайринг на https://www.tbank.ru/business/ecom/
-2. Создайте терминал в личном кабинете
-3. Получите Terminal Key и Password
-4. Подробная инструкция: **TINKOFF_SETUP.md**
-
-#### YooKassa
-1. Зарегистрируйтесь на https://yookassa.ru
-2. Получите Shop ID и Secret Key
-3. Настройте уведомления о платежах
 
 #### 131.ru (СБП)
 1. Активируйте проект в личном кабинете 131 (напр. `ewave_acq_fps`)
@@ -156,8 +128,7 @@ eWave/
 │   ├── index.js         # Express сервер
 │   ├── routes/          # API роуты
 │   │   ├── esim.js
-│   │   ├── payment.js
-│   │   └── webhook.js
+│   │   └── payments131.js
 │   └── services/        # Сервисы
 │       └── esimGoApi.js
 ├── public/              # Статические файлы
@@ -193,9 +164,6 @@ GET  /api/esim/orders/:id/qr       # Получить QR-код
 ### Payment
 
 \`\`\`
-POST /api/payment/stripe/create-session    # Создать сессию Stripe
-POST /api/tinkoff/create-payment           # Создать платёж Т-Банк
-POST /api/payment/yookassa/create-payment  # Создать платёж YooKassa
 POST /api/payments/131/sbp/create-payment  # Создать платёж СБП (131)
 GET  /api/payments/131/sbp/orders/:orderId # Получить статус платежа СБП
 \`\`\`
@@ -203,9 +171,6 @@ GET  /api/payments/131/sbp/orders/:orderId # Получить статус пл�
 ### Webhooks
 
 \`\`\`
-POST /api/webhook/stripe      # Webhook Stripe
-POST /api/tinkoff/notification # Webhook Т-Банк
-POST /api/webhook/yookassa    # Webhook YooKassa
 POST /api/payments/131/webhook # Webhook 131 (СБП)
 \`\`\`
 
