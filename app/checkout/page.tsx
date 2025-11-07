@@ -2,7 +2,13 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getPackageDetails, createStripeSession, createYooKassaPayment, createTinkoffPayment } from '@/lib/api';
+import {
+  getPackageDetails,
+  createStripeSession,
+  createYooKassaPayment,
+  createTinkoffPayment,
+  createPayment131SBP,
+} from '@/lib/api';
 import { hapticFeedback, showBackButton, hideBackButton } from '@/lib/telegram';
 import LoadingScreen from '@/components/LoadingScreen';
 import CoverageModal from '@/components/CoverageModal';
@@ -15,7 +21,7 @@ function CheckoutContent() {
   const [pkg, setPkg] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'yookassa' | 'tinkoff'>('tinkoff');
+  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'yookassa' | 'tinkoff' | 'sbp131'>('tinkoff');
   const [coverageOpen, setCoverageOpen] = useState(false);
 
   useEffect(() => {
@@ -79,6 +85,45 @@ function CheckoutContent() {
         if (payment.paymentUrl) {
           window.location.href = payment.paymentUrl;
         }
+      } else if (paymentMethod === 'sbp131') {
+        const amountRub = pkg.priceRub || Math.round(pkg.price * 95);
+        const orderId = `esim_${Date.now()}`;
+        const successUrl = `${window.location.origin}/success?order=${orderId}`;
+        const failUrl = `${window.location.origin}/checkout?package=${pkg.id}&status=payment_failed`;
+
+        const payment = await createPayment131SBP({
+          amount: amountRub,
+          currency: 'RUB',
+          orderId,
+          description: `eSIM ${pkg.name}`,
+          successUrl,
+          failUrl,
+          metadata: {
+            packageId: pkg.id,
+            packageName: pkg.name,
+            region: pkg.region,
+          },
+        });
+
+        const redirectUrl =
+          payment?.paymentUrl ||
+          payment?.url ||
+          payment?.deeplink ||
+          payment?.link ||
+          payment?.sbpUrl ||
+          payment?.formUrl ||
+          payment?.invoice?.url ||
+          payment?.payload?.formUrl ||
+          payment?.redirect?.url;
+
+        if (redirectUrl) {
+          window.location.href = redirectUrl;
+        } else if (payment?.qr?.link) {
+          window.location.href = payment.qr.link;
+        } else {
+          console.warn('SBP payment response missing redirect URL', payment);
+          alert('Не удалось получить ссылку на оплату СБП. Свяжитесь с поддержкой.');
+        }
       } else {
         const payment = await createYooKassaPayment({
           packageId: pkg.id,
@@ -95,6 +140,7 @@ function CheckoutContent() {
     } catch (error) {
       console.error('Payment error:', error);
       alert('Ошибка при создании платежа');
+    } finally {
       setProcessing(false);
     }
   };
@@ -345,6 +391,33 @@ function CheckoutContent() {
                   <div className="text-sm text-text-secondary">Карты РФ, СБП, рассрочка</div>
                 </div>
                 {paymentMethod === 'tinkoff' && (
+                  <div className="text-primary text-xl">✓</div>
+                )}
+              </div>
+            </button>
+
+            <button
+              onClick={() => {
+                setPaymentMethod('sbp131');
+                hapticFeedback('light');
+              }}
+              className={`w-full p-4 rounded-xl border-2 transition-all ${
+                paymentMethod === 'sbp131'
+                  ? 'border-primary bg-primary/5'
+                  : 'border-gray-200 hover:border-primary/30'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-secondary rounded-xl flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none">
+                    <path d="M4 12h16M12 4v16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                </div>
+                <div className="flex-1 text-left">
+                  <div className="font-medium text-text-primary">СБП (131)</div>
+                  <div className="text-sm text-text-secondary">Оплата через СБП, перевод по QR или ссылке</div>
+                </div>
+                {paymentMethod === 'sbp131' && (
                   <div className="text-primary text-xl">✓</div>
                 )}
               </div>

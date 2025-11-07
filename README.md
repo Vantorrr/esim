@@ -6,7 +6,7 @@
 
 - 🌍 **200+ стран** - покрытие по всему миру
 - ⚡ **Мгновенная активация** - получите eSIM за 1 минуту
-- 💳 **Удобная оплата** - Stripe и ЮKassa
+- 💳 **Удобная оплата** - Stripe, Т-Банк, YooKassa и 131 (СБП)
 - 📱 **QR-код** - простая установка через сканирование
 - 🎨 **Современный UI** - красивый интерфейс с градиентами
 - 🌐 **Мультиязычность** - поддержка RU/EN
@@ -26,6 +26,7 @@
 - **Stripe** - международные платежи
 - **Т-Банк (Tinkoff)** - платежи РФ, СБП, рассрочка
 - **YooKassa** - платежи РФ
+- **131.ru FPS** - приём платежей через СБП
 
 ## 🚀 Быстрый старт
 
@@ -54,6 +55,14 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 
 YOOKASSA_SHOP_ID=your_shop_id
 YOOKASSA_SECRET_KEY=your_secret_key
+
+# 131.ru FPS (СБП)
+PAYMENT_131_BASE_URL=https://api.131.ru
+PAYMENT_131_PROJECT=ewave_acq_fps
+PAYMENT_131_MERCHANT=askolskay
+PAYMENT_131_KEY_ID=prod-key-id
+PAYMENT_131_PRIVATE_PEM="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
+PAYMENT_131_WEBHOOK_WHITELIST=84.252.136.174,84.201.171.246
 
 # Server
 PORT=8080
@@ -86,6 +95,12 @@ WEBHOOK_URL=https://your-domain.com/api/webhook
 1. Зарегистрируйтесь на https://yookassa.ru
 2. Получите Shop ID и Secret Key
 3. Настройте уведомления о платежах
+
+#### 131.ru (СБП)
+1. Активируйте проект в личном кабинете 131 (напр. `ewave_acq_fps`)
+2. Получите значения `project`, `merchant` и `keyId`
+3. Сгенерируйте RSA-ключ по инструкции провайдера и сохраните приватный ключ в `PAYMENT_131_PRIVATE_PEM`
+4. Добавьте домен приложения и webhook URL, whitelist IP `84.252.136.174,84.201.171.246`
 
 ### 4. Запуск в режиме разработки
 
@@ -181,6 +196,8 @@ GET  /api/esim/orders/:id/qr       # Получить QR-код
 POST /api/payment/stripe/create-session    # Создать сессию Stripe
 POST /api/tinkoff/create-payment           # Создать платёж Т-Банк
 POST /api/payment/yookassa/create-payment  # Создать платёж YooKassa
+POST /api/payments/131/sbp/create-payment  # Создать платёж СБП (131)
+GET  /api/payments/131/sbp/orders/:orderId # Получить статус платежа СБП
 \`\`\`
 
 ### Webhooks
@@ -189,6 +206,7 @@ POST /api/payment/yookassa/create-payment  # Создать платёж YooKass
 POST /api/webhook/stripe      # Webhook Stripe
 POST /api/tinkoff/notification # Webhook Т-Банк
 POST /api/webhook/yookassa    # Webhook YooKassa
+POST /api/payments/131/webhook # Webhook 131 (СБП)
 \`\`\`
 
 ## 🌍 Развёртывание

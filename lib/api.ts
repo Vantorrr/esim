@@ -81,3 +81,23 @@ export const getTinkoffPaymentStatus = async (paymentId: string) => {
   return response.data;
 };
 
+export const createPayment131SBP = async (payload: {
+  amount: number | string;
+  currency?: string;
+  orderId?: string;
+  description?: string;
+  successUrl?: string;
+  failUrl?: string;
+  metadata?: Record<string, any>;
+  customer?: Record<string, any>;
+  extra?: Record<string, any>;
+}) => {
+  const response = await api.post('/payments/131/sbp/create-payment', payload);
+  return response.data;
+};
+
+export const getPayment131SBPStatus = async (orderId: string) => {
+  const response = await api.get(`/payments/131/sbp/orders/${orderId}`);
+  return response.data;
+};
+

@@ -1,6 +1,96 @@
 const express = require('express');
 const crypto = require('crypto');
 const router = express.Router();
+const payments131Client = require('../services/payments131Client');
+
+const DEFAULT_WHITELIST = ['84.252.136.174', '84.201.171.246'];
+const whitelist = (process.env.PAYMENT_131_WEBHOOK_WHITELIST || DEFAULT_WHITELIST.join(','))
+  .split(',')
+  .map((ip) => ip.trim())
+  .filter(Boolean);
+
+function extractClientIp(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+  return (
+    req.connection?.remoteAddress ||
+    req.socket?.remoteAddress ||
+    req.connection?.socket?.remoteAddress ||
+    req.ip ||
+    ''
+  );
+}
+
+function normalizeIp(ip) {
+  if (!ip) return '';
+  return ip.replace('::ffff:', '').trim();
+}
+
+function isIpAllowed(ip) {
+  if (!whitelist.length) return true;
+  const normalized = normalizeIp(ip);
+  return whitelist.includes(normalized);
+}
+
+router.post('/sbp/create-payment', async (req, res) => {
+  try {
+    const {
+      amount,
+      currency = 'RUB',
+      orderId,
+      description,
+      successUrl,
+      failUrl,
+      metadata,
+      customer,
+      extra,
+    } = req.body || {};
+
+    if (!amount) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'amount is required' });
+    }
+
+    const finalOrderId = orderId || `ewave_${Date.now()}`;
+
+    const response = await payments131Client.createSbpPayment({
+      amount,
+      currency,
+      orderId: finalOrderId,
+      description,
+      successUrl,
+      failUrl,
+      metadata,
+      customer,
+      extra,
+    });
+
+    res.json({ orderId: finalOrderId, ...response });
+  } catch (error) {
+    console.error('[131] create SBP payment failed:', error.message, error.details || '');
+    res.status(error.statusCode || 500).json({
+      error: 'PAYMENT_131_SBP_ERROR',
+      message: error.message,
+      details: error.details,
+    });
+  }
+});
+
+router.get('/sbp/orders/:orderId', async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const data = await payments131Client.getSbpPaymentStatus(orderId);
+    res.json(data);
+  } catch (error) {
+    console.error('[131] fetch SBP payment status failed:', error.message, error.details || '');
+    res.status(error.statusCode || 500).json({
+      error: 'PAYMENT_131_SBP_STATUS_ERROR',
+      message: error.message,
+      details: error.details,
+    });
+  }
+});
 
 // GET public key (fallback if not served by Next public dir)
 router.get('/public-key', (req, res) => {
@@ -14,10 +104,14 @@ router.get('/public-key', (req, res) => {
 
 // POST webhook receiver
 router.post('/webhook', async (req, res) => {
-  try {
-    // Minimal fast-ack
-    res.status(200).json({ ok: true });
+  const clientIp = normalizeIp(extractClientIp(req));
 
+  if (!isIpAllowed(clientIp)) {
+    console.warn('[131] webhook rejected (IP not whitelisted):', clientIp);
+    return res.status(403).json({ error: 'FORBIDDEN' });
+  }
+
+  try {
     // Optional signature verification (header names may differ; adjust when spec is final)
     const publicKey = (process.env.PAYMENT_131_PUBLIC_PEM || '').trim();
     const signatureHeader = req.headers['x-signature'] || req.headers['x-131-signature'];
@@ -39,9 +133,12 @@ router.post('/webhook', async (req, res) => {
     }
 
     // Here: enqueue processing, ensure idempotency by event/payment id
+
+    res.status(200).json({ ok: true });
   } catch (e) {
     console.error('[131] webhook handler error:', e.message);
     // Do not fail acknowledgment
+    res.status(200).json({ ok: false });
   }
 });
 

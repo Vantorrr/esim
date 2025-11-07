@@ -39,6 +39,11 @@ curl -X POST https://esim-production.up.railway.app/api/tinkoff/create-payment \
 curl -X POST https://esim-production.up.railway.app/api/payment/stripe/create-session \
   -H "Content-Type: application/json" \
   -d '{"packageId":"test","packageName":"Test","price":10}'
+
+# Создать платёж СБП (131)
+curl -X POST https://esim-production.up.railway.app/api/payments/131/sbp/create-payment \
+  -H "Content-Type: application/json" \
+  -d '{"amount":1000,"currency":"RUB","orderId":"test_order"}'
 ```
 
 ---
@@ -83,6 +88,13 @@ https://esim-production.up.railway.app/api/webhook/stripe
 ```
 https://esim-production.up.railway.app/api/webhook/yookassa
 ```
+
+### 131 (СБП):
+```
+https://esim-production.up.railway.app/api/payments/131/webhook
+```
+
+**Важно:** добавь IP `84.252.136.174` и `84.201.171.246` в whitelist либо оставь по умолчанию в env `PAYMENT_131_WEBHOOK_WHITELIST`.
 
 ---
 
