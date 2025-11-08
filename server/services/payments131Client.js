@@ -34,9 +34,9 @@ function formatAmount(amount) {
 class Payments131Client {
   constructor() {
     this.baseURL = (process.env.PAYMENT_131_BASE_URL || '').replace(/\/$/, '');
-    this.project = process.env.PAYMENT_131_PROJECT || '';
-    this.merchant = process.env.PAYMENT_131_MERCHANT || process.env.PAYMENT_131_MERCHANT_ID || '';
-    this.keyId = process.env.PAYMENT_131_KEY_ID || process.env.PAYMENT_131_KID || '';
+    this.project = (process.env.PAYMENT_131_PROJECT || '').trim();
+    this.merchant = (process.env.PAYMENT_131_MERCHANT || process.env.PAYMENT_131_MERCHANT_ID || '').trim();
+    this.keyId = (process.env.PAYMENT_131_KEY_ID || process.env.PAYMENT_131_KID || '').trim();
     this.privateKey = normalizePem(process.env.PAYMENT_131_PRIVATE_PEM || process.env.PAYMENT_131_PRIVATE_KEY || '');
     this.createPathTemplate = process.env.PAYMENT_131_FPS_CREATE_PATH || '/fps/v1/projects/{project}/orders';
     this.statusPathTemplate = process.env.PAYMENT_131_FPS_STATUS_PATH || '/fps/v1/projects/{project}/orders/{orderId}';
@@ -143,7 +143,9 @@ class Payments131Client {
       err.details = { reason: 'Probably wrong PEM format or encrypted key' };
       throw err;
     }
-    headers.Signature = `keyId="${this.keyId}",algorithm="rsa-sha256",headers="${headersList.join(' ')}",signature="${signature}"`;
+    // Build Signature header and sanitize any accidental CR/LF from env vars
+    const signatureHeader = `keyId="${this.keyId}",algorithm="rsa-sha256",headers="${headersList.join(' ')}",signature="${signature}"`.replace(/[\r\n]+/g, '');
+    headers.Signature = signatureHeader;
 
     return { headers, requestId };
   }
