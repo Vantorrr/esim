@@ -64,6 +64,33 @@ router.get('/debug', async (req, res) => {
   }
 });
 
+// Deeper signature header debug (no secrets revealed)
+router.get('/debug-sign', async (req, res) => {
+  if (process.env.PAYMENT_131_DEBUG !== 'true') {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  try {
+    const client = require('../services/payments131Client');
+    const testPath = client.resolvePath(client.createPathTemplate, { orderId: 'debug' });
+    const { headers } = client.buildHeaders({ method: 'post', path: testPath, body: { test: true } });
+    const value = String(headers.Signature || '');
+    const hasCR = /\r/.test(value);
+    const hasLF = /\n/.test(value);
+    const nonAscii = [...value].map(c => c.charCodeAt(0)).filter(code => code < 32 && code !== 9 || code >= 127);
+    res.json({
+      sample: value.slice(0, 80),
+      length: value.length,
+      hasCR,
+      hasLF,
+      nonAsciiCount: nonAscii.length,
+      nonAsciiFirstCodes: nonAscii.slice(0, 5),
+      headersList: (value.match(/headers=\"([^\"]+)\"/) || [,''])[1],
+    });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
 function extractClientIp(req) {
   const forwarded = req.headers['x-forwarded-for'];
   if (forwarded) {
