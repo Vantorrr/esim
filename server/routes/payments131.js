@@ -44,6 +44,21 @@ router.get('/debug', async (req, res) => {
         parseError = e.message;
       }
     }
+    // Also build a real Signature header and analyze characters
+    let signatureHeaderInfo = null;
+    try {
+      const client = require('../services/payments131Client');
+      const testPath = client.resolvePath(client.createPathTemplate, { orderId: 'debug' });
+      const { headers } = client.buildHeaders({ method: 'post', path: testPath, body: { test: true } });
+      const value = String(headers.Signature || '');
+      signatureHeaderInfo = {
+        sample: value.slice(0, 80),
+        length: value.length,
+        hasCR: /\\r/.test(value),
+        hasLF: /\\n/.test(value),
+        nonAsciiCount: [...value].map(c => c.charCodeAt(0)).filter(code => (code < 32 && code !== 9) || code >= 127).length,
+      };
+    } catch {}
     res.json({
       configured: Boolean(key),
       baseUrlConfigured: Boolean((process.env.PAYMENT_131_BASE_URL || '').trim()),
@@ -58,6 +73,7 @@ router.get('/debug', async (req, res) => {
       signOk,
       signError,
       signaturePreview,
+      signatureHeaderInfo,
     });
   } catch (e) {
     return res.status(500).json({ error: e.message });
