@@ -2,12 +2,67 @@ const express = require('express');
 const crypto = require('crypto');
 const router = express.Router();
 const payments131Client = require('../services/payments131Client');
+const fs = require('fs');
 
 const DEFAULT_WHITELIST = ['84.252.136.174', '84.201.171.246'];
 const whitelist = (process.env.PAYMENT_131_WEBHOOK_WHITELIST || DEFAULT_WHITELIST.join(','))
   .split(',')
   .map((ip) => ip.trim())
   .filter(Boolean);
+
+// Lightweight diagnostics (no secrets leaked)
+// Enable via env PAYMENT_131_DEBUG=true
+router.get('/debug', async (req, res) => {
+  if (process.env.PAYMENT_131_DEBUG !== 'true') {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  try {
+    const key = (process.env.PAYMENT_131_PRIVATE_PEM || process.env.PAYMENT_131_PRIVATE_KEY || '').trim();
+    const header = key.match(/-----BEGIN ([A-Z\s]+)-----/)?.[1] || 'NONE';
+    const encrypted = /ENCRYPTED/i.test(header);
+    const hasEnd = /-----END [^-]+-----/.test(key);
+    let parseOk = false;
+    let signOk = false;
+    let parseError = null;
+    let signError = null;
+    let signaturePreview = null;
+    if (key) {
+      try {
+        const privateKeyObj = require('crypto').createPrivateKey({ key, format: 'pem' });
+        parseOk = true;
+        try {
+          const signer = require('crypto').createSign('RSA-SHA256');
+          signer.update('ewave-debug');
+          signer.end();
+          const sig = signer.sign(privateKeyObj, 'base64');
+          signaturePreview = sig.slice(0, 16);
+          signOk = true;
+        } catch (e) {
+          signError = e.message;
+        }
+      } catch (e) {
+        parseError = e.message;
+      }
+    }
+    res.json({
+      configured: Boolean(key),
+      baseUrlConfigured: Boolean((process.env.PAYMENT_131_BASE_URL || '').trim()),
+      project: process.env.PAYMENT_131_PROJECT || '',
+      merchant: process.env.PAYMENT_131_MERCHANT || process.env.PAYMENT_131_MERCHANT_ID || '',
+      keyId: process.env.PAYMENT_131_KEY_ID || process.env.PAYMENT_131_KID || '',
+      keyHeader: header,
+      encrypted,
+      hasEndFooter: hasEnd,
+      parseOk,
+      parseError,
+      signOk,
+      signError,
+      signaturePreview,
+    });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
 
 function extractClientIp(req) {
   const forwarded = req.headers['x-forwarded-for'];
