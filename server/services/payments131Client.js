@@ -3,11 +3,22 @@ const crypto = require('crypto');
 
 function normalizePem(pem) {
   if (!pem) return '';
-  const hydrated = pem.trim().replace(/\\n/g, '\n');
-  if (hydrated.includes('BEGIN')) {
-    return hydrated.endsWith('\n') ? hydrated : `${hydrated}\n`;
+  // Remove surrounding quotes if someone pasted with quotes
+  let value = String(pem).trim().replace(/^['"]|['"]$/g, '');
+  // Support escaped newlines and Windows newlines
+  value = value.replace(/\\n/g, '\n').replace(/\r\n/g, '\n');
+  // Collapse accidental spaces around header/footer
+  value = value.replace(/-+\s*BEGIN\s+([A-Z\s]+)\s*-+/g, (m, t) => `-----BEGIN ${t.trim()}-----`);
+  value = value.replace(/-+\s*END\s+([A-Z\s]+)\s*-+/g, (m, t) => `-----END ${t.trim()}-----`);
+
+  // If only base64 provided without headers — wrap as PKCS#8
+  if (!/-----BEGIN [^-]+-----/.test(value)) {
+    value = `-----BEGIN PRIVATE KEY-----\n${value}\n-----END PRIVATE KEY-----\n`;
   }
-  return `-----BEGIN PRIVATE KEY-----\n${hydrated}\n-----END PRIVATE KEY-----\n`;
+
+  // Ensure single trailing newline
+  if (!value.endsWith('\n')) value += '\n';
+  return value;
 }
 
 function formatAmount(amount) {
@@ -56,6 +67,32 @@ class Payments131Client {
     const dateHeader = new Date().toUTCString();
     const payload = body ? JSON.stringify(body) : '';
 
+    // Try to parse the private key early to provide clear error messages
+    let privateKeyObject;
+    try {
+      const keyHeaderMatch = (this.privateKey || '').match(/-----BEGIN ([A-Z\s]+)-----/);
+      const keyHeader = keyHeaderMatch ? keyHeaderMatch[1].trim() : 'UNKNOWN';
+      if (/ENCRYPTED/i.test(keyHeader)) {
+        const err = new Error(
+          'Encrypted private key is not supported. Please provide an unencrypted PKCS#8 or PKCS#1 PEM.'
+        );
+        err.details = {
+          tip: 'Run: openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in encrypted.pem -out key.pem',
+        };
+        throw err;
+      }
+      privateKeyObject = crypto.createPrivateKey({
+        key: this.privateKey,
+        format: 'pem',
+      });
+    } catch (e) {
+      const header = (this.privateKey || '').match(/-----BEGIN [^-]+-----/)?.[0] || 'NO HEADER';
+      const snippet = (this.privateKey || '').split('\n').slice(0, 2).join('\\n');
+      const err = new Error(`Private key parse failed: ${e.message}`);
+      err.details = { header, snippet };
+      throw err;
+    }
+
     const headers = {
       'Content-Type': 'application/json',
       Date: dateHeader,
@@ -98,7 +135,14 @@ class Payments131Client {
     signer.update(signingString);
     signer.end();
 
-    const signature = signer.sign(this.privateKey, 'base64');
+    let signature;
+    try {
+      signature = signer.sign(privateKeyObject, 'base64');
+    } catch (e) {
+      const err = new Error(`Signing failed: ${e.message}`);
+      err.details = { reason: 'Probably wrong PEM format or encrypted key' };
+      throw err;
+    }
     headers.Signature = `keyId="${this.keyId}",algorithm="rsa-sha256",headers="${headersList.join(' ')}",signature="${signature}"`;
 
     return { headers, requestId };
