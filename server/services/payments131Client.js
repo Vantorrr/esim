@@ -219,22 +219,24 @@ class Payments131Client {
       throw new Error('orderId is required for 131 SBP payment');
     }
 
-    const path = this.resolvePath(this.createPathTemplate, { orderId });
+    // Use /api/v1/session/init/payout as per Bank 131 docs
+    const path = '/api/v1/session/init/payout';
 
     const payload = {
-      order: {
-        id: orderId,
-        description: description || `Order ${orderId}`,
-      },
-      amount: {
-        value: formatAmount(amount),
+      merchant_order_id: orderId,
+      description: description || `Order ${orderId}`,
+      amount_details: {
+        amount: formatAmount(amount),
         currency,
       },
-      payment_method: 'SBP',
-      success_url: successUrl,
-      fail_url: failUrl,
-      customer,
-      metadata,
+      payment_method: {
+        type: 'fps',
+        fps: {
+          phone: customer?.phone || '',
+        },
+      },
+      customer: customer || {},
+      metadata: metadata || {},
       ...extra,
     };
 
@@ -248,12 +250,12 @@ class Payments131Client {
     return this.request('post', path, payload);
   }
 
-  async getSbpPaymentStatus(orderId) {
-    if (!orderId) {
-      throw new Error('orderId is required to fetch 131 SBP payment status');
+  async getSbpPaymentStatus(sessionId) {
+    if (!sessionId) {
+      throw new Error('sessionId is required to fetch 131 SBP payment status');
     }
 
-    const path = this.resolvePath(this.statusPathTemplate, { orderId });
+    const path = `/api/v1/session/${sessionId}/status`;
     return this.request('get', path);
   }
 
@@ -268,5 +270,6 @@ class Payments131Client {
 }
 
 module.exports = new Payments131Client();
+
 
 
