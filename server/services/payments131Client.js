@@ -107,11 +107,11 @@ class Payments131Client {
       'Content-Type': 'application/json',
       Date: dateHeader,
       'X-Request-Id': requestId,
-      Merchant: this.merchant,
-      Project: this.project,
+      'X-PARTNER-MERCHANT': this.merchant,
+      'X-PARTNER-PROJECT': this.project,
     };
 
-    const headersList = ['(request-target)', 'date', 'x-request-id', 'merchant', 'project'];
+    const headersList = ['(request-target)', 'date', 'x-request-id', 'x-partner-merchant', 'x-partner-project'];
 
     if (payload) {
       const digest = `SHA-256=${crypto.createHash('sha256').update(payload).digest('base64')}`;
@@ -130,10 +130,10 @@ class Payments131Client {
             return `digest: ${headers.Digest}`;
           case 'x-request-id':
             return `x-request-id: ${requestId}`;
-          case 'merchant':
-            return `merchant: ${this.merchant}`;
-          case 'project':
-            return `project: ${this.project}`;
+          case 'x-partner-merchant':
+            return `x-partner-merchant: ${this.merchant}`;
+          case 'x-partner-project':
+            return `x-partner-project: ${this.project}`;
           default:
             return '';
         }
@@ -153,11 +153,11 @@ class Payments131Client {
       err.details = { reason: 'Probably wrong PEM format or encrypted key' };
       throw err;
     }
-    // Build Signature header and sanitize any accidental CR/LF from env vars
+    // Build X-PARTNER-SIGN header and sanitize any accidental CR/LF from env vars
     const signatureHeader = sanitizeAscii(
       `keyId="${this.keyId}",algorithm="rsa-sha256",headers="${headersList.join(' ')}",signature="${signature}"`
     ).replace(/[\r\n]+/g, '');
-    headers.Signature = signatureHeader;
+    headers['X-PARTNER-SIGN'] = signatureHeader;
 
     return { headers, requestId };
   }
