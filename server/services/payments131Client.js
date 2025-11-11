@@ -111,12 +111,13 @@ class Payments131Client {
       'X-PARTNER-PROJECT': this.project,
     };
 
-    const headersList = ['(request-target)', 'date', 'x-request-id', 'x-partner-merchant', 'x-partner-project'];
+    const headersList = ['(request-target)', 'date', 'content-type', 'x-request-id', 'x-partner-merchant', 'x-partner-project'];
 
     if (payload) {
       const digest = `SHA-256=${crypto.createHash('sha256').update(payload).digest('base64')}`;
       headers.Digest = digest;
-      headersList.splice(2, 0, 'digest');
+      // Keep order: (request-target), date, content-type, digest, x-request-id, ...
+      headersList.splice(3, 0, 'digest');
     }
 
     const signingString = headersList
@@ -126,6 +127,8 @@ class Payments131Client {
             return `${headerName}: ${lowerMethod} ${path}`;
           case 'date':
             return `date: ${dateHeader}`;
+          case 'content-type':
+            return `content-type: application/json`;
           case 'digest':
             return `digest: ${headers.Digest}`;
           case 'x-request-id':
