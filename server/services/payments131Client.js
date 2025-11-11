@@ -72,16 +72,13 @@ class Payments131Client {
   }
 
   buildHeaders({ method, path, body }) {
-    const lowerMethod = method.toLowerCase();
     const requestId = crypto.randomUUID();
     const dateHeader = new Date().toUTCString();
-    const payload = body ? JSON.stringify(body) : '';
-    // Derive Host for signature
-    let hostHeader = 'proxy.bank131.ru';
-    try {
-      const u = new URL(this.baseURL || 'https://proxy.bank131.ru');
-      hostHeader = u.host;
-    } catch {}
+    const payload = body
+      ? typeof body === 'string'
+        ? body
+        : JSON.stringify(body)
+      : '';
 
     // Try to parse the private key early to provide clear error messages
     let privateKeyObject;
@@ -113,74 +110,24 @@ class Payments131Client {
       'Content-Type': 'application/json',
       Accept: 'application/json',
       Date: dateHeader,
-      Host: hostHeader,
       'X-Request-Id': requestId,
       'X-PARTNER-MERCHANT': this.merchant,
       'X-PARTNER-PROJECT': this.project,
     };
 
-    // Sign headers in the order recommended by docs (include content-type)
-    const headersList = [
-      '(request-target)',
-      'date',
-      'content-type',
-      'digest',
-      'host',
-      'x-request-id',
-      'x-partner-merchant',
-      'x-partner-project',
-    ];
-
-    if (payload) {
-      const digest = `SHA-256=${crypto.createHash('sha256').update(payload).digest('base64')}`;
-      headers.Digest = digest;
-      // digest is already in headersList with the right order
-    }
-
-    const signingString = headersList
-      .map((headerName) => {
-        switch (headerName) {
-          case '(request-target)':
-            return `${headerName}: ${lowerMethod} ${path}`;
-          case 'date':
-            return `date: ${dateHeader}`;
-          case 'digest':
-            return `digest: ${headers.Digest}`;
-          case 'content-type':
-            return `content-type: application/json`;
-          case 'host':
-            return `host: ${hostHeader}`;
-          case 'x-request-id':
-            return `x-request-id: ${requestId}`;
-          case 'x-partner-merchant':
-            return `x-partner-merchant: ${this.merchant}`;
-          case 'x-partner-project':
-            return `x-partner-project: ${this.project}`;
-          default:
-            return '';
-        }
-      })
-      .filter(Boolean)
-      .join('\n');
-
-    const signer = crypto.createSign('RSA-SHA256');
-    signer.update(signingString);
-    signer.end();
-
     let signature;
     try {
+      const signer = crypto.createSign('RSA-SHA256');
+      signer.update(payload);
+      signer.end();
       signature = signer.sign(privateKeyObject, 'base64');
     } catch (e) {
       const err = new Error(`Signing failed: ${e.message}`);
       err.details = { reason: 'Probably wrong PEM format or encrypted key' };
       throw err;
     }
-    // Build signature header and sanitize any accidental CR/LF from env vars
-    const signatureHeader = sanitizeAscii(
-      `keyId="${this.keyId}",algorithm="rsa-sha256",headers="${headersList.join(' ')}",signature="${signature}"`
-    ).replace(/[\r\n]+/g, '');
-    // Bank 131 expects X-PARTNER-SIGN; keep only required header to avoid ambiguity
-    headers['X-PARTNER-SIGN'] = signatureHeader;
+
+    headers['X-PARTNER-SIGN'] = sanitizeAscii(signature);
 
     return { headers, requestId };
   }
@@ -202,12 +149,18 @@ class Payments131Client {
 
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
     const { headers } = this.buildHeaders({ method, path: normalizedPath, body });
+    const payload =
+      body && typeof body === 'string'
+        ? body
+        : body
+        ? JSON.stringify(body)
+        : undefined;
 
     try {
       const response = await this.http.request({
         method,
         url: normalizedPath,
-        data: body,
+        data: payload,
         headers,
         timeout: this.timeout,
       });
