@@ -111,6 +111,7 @@ class Payments131Client {
 
     const headers = {
       'Content-Type': 'application/json',
+      Accept: 'application/json',
       Date: dateHeader,
       Host: hostHeader,
       'X-Request-Id': requestId,
@@ -118,8 +119,17 @@ class Payments131Client {
       'X-PARTNER-PROJECT': this.project,
     };
 
-    // Sign exactly these headers (lowercased names in signing string)
-    const headersList = ['(request-target)', 'date', 'digest', 'host', 'x-request-id', 'x-partner-merchant', 'x-partner-project'];
+    // Sign headers in the order recommended by docs (include content-type)
+    const headersList = [
+      '(request-target)',
+      'date',
+      'content-type',
+      'digest',
+      'host',
+      'x-request-id',
+      'x-partner-merchant',
+      'x-partner-project',
+    ];
 
     if (payload) {
       const digest = `SHA-256=${crypto.createHash('sha256').update(payload).digest('base64')}`;
@@ -136,6 +146,8 @@ class Payments131Client {
             return `date: ${dateHeader}`;
           case 'digest':
             return `digest: ${headers.Digest}`;
+          case 'content-type':
+            return `content-type: application/json`;
           case 'host':
             return `host: ${hostHeader}`;
           case 'x-request-id':
