@@ -155,6 +155,20 @@ class Payments131Client {
     const { headers } = this.buildHeaders({ method, path: normalizedPath, body });
     const payload = typeof body === 'string' ? body : body ? JSON.stringify(body) : undefined;
 
+    if (process.env.PAYMENT_131_DEBUG === 'true') {
+      console.log('[131] request', {
+        method,
+        path: normalizedPath,
+        hasPayload: Boolean(payload),
+        payloadPreview: payload ? payload.slice(0, 200) : null,
+        payloadLength: payload?.length || 0,
+        headers: {
+          'X-PARTNER-PROJECT': headers['X-PARTNER-PROJECT'],
+          'X-PARTNER-SIGN': headers['X-PARTNER-SIGN']?.slice(0, 16) + '...',
+        },
+      });
+    }
+
     try {
       const response = await this.http.request({
         method,
