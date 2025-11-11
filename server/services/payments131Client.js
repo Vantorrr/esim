@@ -219,8 +219,8 @@ class Payments131Client {
       throw new Error('orderId is required for 131 SBP payment');
     }
 
-    // Use /api/v1/session/init/payout as per Bank 131 docs
-    const path = '/api/v1/session/init/payout';
+    // Use /api/v1/session/init/payment for accepting payments via SBP
+    const path = '/api/v1/session/init/payment';
 
     const payload = {
       merchant_order_id: orderId,
@@ -230,10 +230,7 @@ class Payments131Client {
         currency,
       },
       payment_method: {
-        type: 'fps',
-        fps: {
-          phone: customer?.phone || '',
-        },
+        type: 'sbp',
       },
       customer: customer || {},
       metadata: metadata || {},
