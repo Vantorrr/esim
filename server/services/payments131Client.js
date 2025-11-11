@@ -76,6 +76,12 @@ class Payments131Client {
     const requestId = crypto.randomUUID();
     const dateHeader = new Date().toUTCString();
     const payload = body ? JSON.stringify(body) : '';
+    // Derive Host for signature
+    let hostHeader = 'proxy.bank131.ru';
+    try {
+      const u = new URL(this.baseURL || 'https://proxy.bank131.ru');
+      hostHeader = u.host;
+    } catch {}
 
     // Try to parse the private key early to provide clear error messages
     let privateKeyObject;
@@ -106,18 +112,19 @@ class Payments131Client {
     const headers = {
       'Content-Type': 'application/json',
       Date: dateHeader,
+      Host: hostHeader,
       'X-Request-Id': requestId,
       'X-PARTNER-MERCHANT': this.merchant,
       'X-PARTNER-PROJECT': this.project,
     };
 
-    const headersList = ['(request-target)', 'date', 'content-type', 'x-request-id', 'x-partner-merchant', 'x-partner-project'];
+    // Sign exactly these headers (lowercased names in signing string)
+    const headersList = ['(request-target)', 'date', 'digest', 'host', 'x-request-id', 'x-partner-merchant', 'x-partner-project'];
 
     if (payload) {
       const digest = `SHA-256=${crypto.createHash('sha256').update(payload).digest('base64')}`;
       headers.Digest = digest;
-      // Keep order: (request-target), date, content-type, digest, x-request-id, ...
-      headersList.splice(3, 0, 'digest');
+      // digest is already in headersList with the right order
     }
 
     const signingString = headersList
@@ -127,10 +134,10 @@ class Payments131Client {
             return `${headerName}: ${lowerMethod} ${path}`;
           case 'date':
             return `date: ${dateHeader}`;
-          case 'content-type':
-            return `content-type: application/json`;
           case 'digest':
             return `digest: ${headers.Digest}`;
+          case 'host':
+            return `host: ${hostHeader}`;
           case 'x-request-id':
             return `x-request-id: ${requestId}`;
           case 'x-partner-merchant':
@@ -160,9 +167,7 @@ class Payments131Client {
     const signatureHeader = sanitizeAscii(
       `keyId="${this.keyId}",algorithm="rsa-sha256",headers="${headersList.join(' ')}",signature="${signature}"`
     ).replace(/[\r\n]+/g, '');
-    // Some specs use 'Signature', some use 'X-PARTNER-SIGN' — send both
-    headers['Signature'] = signatureHeader;
-    headers['Authorization'] = `Signature ${signatureHeader}`;
+    // Bank 131 expects X-PARTNER-SIGN; keep only required header to avoid ambiguity
     headers['X-PARTNER-SIGN'] = signatureHeader;
 
     return { headers, requestId };
