@@ -162,6 +162,7 @@ class Payments131Client {
     ).replace(/[\r\n]+/g, '');
     // Some specs use 'Signature', some use 'X-PARTNER-SIGN' — send both
     headers['Signature'] = signatureHeader;
+    headers['Authorization'] = `Signature ${signatureHeader}`;
     headers['X-PARTNER-SIGN'] = signatureHeader;
 
     return { headers, requestId };
