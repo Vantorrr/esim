@@ -153,10 +153,12 @@ class Payments131Client {
       err.details = { reason: 'Probably wrong PEM format or encrypted key' };
       throw err;
     }
-    // Build X-PARTNER-SIGN header and sanitize any accidental CR/LF from env vars
+    // Build signature header and sanitize any accidental CR/LF from env vars
     const signatureHeader = sanitizeAscii(
       `keyId="${this.keyId}",algorithm="rsa-sha256",headers="${headersList.join(' ')}",signature="${signature}"`
     ).replace(/[\r\n]+/g, '');
+    // Some specs use 'Signature', some use 'X-PARTNER-SIGN' — send both
+    headers['Signature'] = signatureHeader;
     headers['X-PARTNER-SIGN'] = signatureHeader;
 
     return { headers, requestId };
