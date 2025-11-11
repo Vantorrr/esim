@@ -156,6 +156,15 @@ class Payments131Client {
     const payload = typeof body === 'string' ? body : body ? JSON.stringify(body) : undefined;
 
     if (process.env.PAYMENT_131_DEBUG === 'true') {
+      this.__lastDebug = {
+        method,
+        path: normalizedPath,
+        payload,
+        headersSnapshot: {
+          'X-PARTNER-PROJECT': headers['X-PARTNER-PROJECT'],
+          'X-PARTNER-SIGN': headers['X-PARTNER-SIGN'],
+        },
+      };
       console.log('[131] request', {
         method,
         path: normalizedPath,
@@ -262,7 +271,8 @@ class Payments131Client {
   }
 }
 
-module.exports = new Payments131Client();
+const clientInstance = new Payments131Client();
+module.exports = clientInstance;
 
 
 

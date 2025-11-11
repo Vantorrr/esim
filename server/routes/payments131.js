@@ -59,6 +59,8 @@ router.get('/debug', async (req, res) => {
         nonAsciiCount: [...value].map(c => c.charCodeAt(0)).filter(code => (code < 32 && code !== 9) || code >= 127).length,
       };
     } catch {}
+    const debugPayload = payments131Client.__lastDebug || null;
+
     res.json({
       configured: Boolean(key),
       baseUrlConfigured: Boolean((process.env.PAYMENT_131_BASE_URL || '').trim()),
@@ -74,6 +76,15 @@ router.get('/debug', async (req, res) => {
       signError,
       signaturePreview,
       signatureHeaderInfo,
+      lastRequest: debugPayload
+        ? {
+            method: debugPayload.method,
+            path: debugPayload.path,
+            payloadPreview: debugPayload.payload ? debugPayload.payload.slice(0, 200) : null,
+            payloadLength: debugPayload.payload?.length || 0,
+            headers: debugPayload.headersSnapshot,
+          }
+        : null,
     });
   } catch (e) {
     return res.status(500).json({ error: e.message });
