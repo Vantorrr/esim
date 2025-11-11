@@ -33,10 +33,14 @@ function normalizePem(pem) {
 
 function formatAmount(amount) {
   if (typeof amount === 'number') {
-    return amount.toFixed(2);
+    return Math.round(amount * 100);
   }
   if (typeof amount === 'string') {
-    return amount;
+    const numeric = Number(amount);
+    if (Number.isNaN(numeric)) {
+      throw new Error('Amount string must be numeric');
+    }
+    return Math.round(numeric * 100);
   }
   throw new Error('Amount must be string or number');
 }
@@ -149,12 +153,7 @@ class Payments131Client {
 
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
     const { headers } = this.buildHeaders({ method, path: normalizedPath, body });
-    const payload =
-      body && typeof body === 'string'
-        ? body
-        : body
-        ? JSON.stringify(body)
-        : undefined;
+    const payload = typeof body === 'string' ? body : body ? JSON.stringify(body) : undefined;
 
     try {
       const response = await this.http.request({
@@ -198,17 +197,22 @@ class Payments131Client {
     // Use /api/v1/session/init/payment for accepting payments via SBP
     const path = '/api/v1/session/init/payment';
 
+    const paymentDetails = {
+      type: 'faster_payment_system',
+      faster_payment_system: {
+        description: description || `Order ${orderId}`,
+      },
+    };
+
     const payload = {
       merchant_order_id: orderId,
-      description: description || `Order ${orderId}`,
+      payment_details: paymentDetails,
       amount_details: {
         amount: formatAmount(amount),
-        currency,
+        currency: (currency || 'RUB').toLowerCase(),
       },
-      payment_method: {
-        type: 'sbp',
-      },
-      customer: customer || {},
+      customer: customer && customer.reference ? customer : { reference: orderId },
+      payment_options: successUrl ? { return_url: successUrl } : undefined,
       metadata: metadata || {},
       ...extra,
     };
@@ -220,7 +224,9 @@ class Payments131Client {
       }
     });
 
-    return this.request('post', path, payload);
+    const payloadString = JSON.stringify(payload);
+
+    return this.request('post', path, payloadString);
   }
 
   async getSbpPaymentStatus(sessionId) {
