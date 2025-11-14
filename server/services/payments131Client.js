@@ -177,9 +177,12 @@ class Payments131Client {
     }
 
     // Build Signature header according to HTTP Signature spec
+    // Note: headers list uses lowercase as per RFC 9421
     const signatureHeader = `keyId="${this.keyId}",algorithm="rsa-sha256",headers="(request-target) date${digestHeader ? ' digest' : ''} host x-request-id x-partner-merchant x-partner-project",signature="${signature}"`;
 
     headers['X-PARTNER-SIGN'] = sanitizeAscii(signature);
+    // Some banks expect only X-PARTNER-SIGN, others also need Authorization
+    // Try with both for now
     headers.Authorization = `Signature ${signatureHeader}`;
 
     if (process.env.PAYMENT_131_DEBUG === 'true') {
