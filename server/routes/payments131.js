@@ -46,19 +46,29 @@ router.get('/debug', async (req, res) => {
     }
     // Also build a real Signature header and analyze characters
     let signatureHeaderInfo = null;
+    let signingStringSample = null;
     try {
       const client = require('../services/payments131Client');
-      const testPath = client.resolvePath(client.createPathTemplate, { orderId: 'debug' });
-      const { headers } = client.buildHeaders({ method: 'post', path: testPath, body: { test: true } });
-      const value = String(headers.Signature || '');
+      const testPath = '/api/v1/session/init/payment';
+      const testBody = JSON.stringify({ test: true });
+      const { headers } = client.buildHeaders({ method: 'post', path: testPath, body: testBody });
+      const authHeader = String(headers.Authorization || '');
       signatureHeaderInfo = {
-        sample: value.slice(0, 80),
-        length: value.length,
-        hasCR: /\\r/.test(value),
-        hasLF: /\\n/.test(value),
-        nonAsciiCount: [...value].map(c => c.charCodeAt(0)).filter(code => (code < 32 && code !== 9) || code >= 127).length,
+        sample: authHeader.slice(0, 150),
+        length: authHeader.length,
+        hasCR: /\r/.test(authHeader),
+        hasLF: /\n/.test(authHeader),
+        nonAsciiCount: [...authHeader].map(c => c.charCodeAt(0)).filter(code => (code < 32 && code !== 9) || code >= 127).length,
+        hasXPartnerSign: Boolean(headers['X-PARTNER-SIGN']),
+        xPartnerSignLength: headers['X-PARTNER-SIGN']?.length || 0,
       };
-    } catch {}
+      // Try to extract signing string from client if available
+      if (client.__lastSigningString) {
+        signingStringSample = client.__lastSigningString.slice(0, 300);
+      }
+    } catch (e) {
+      signatureHeaderInfo = { error: e.message };
+    }
     const debugPayload = payments131Client.__lastDebug || null;
 
     res.json({
@@ -76,6 +86,7 @@ router.get('/debug', async (req, res) => {
       signError,
       signaturePreview,
       signatureHeaderInfo,
+      signingStringSample,
       lastRequest: debugPayload
         ? {
             method: debugPayload.method,

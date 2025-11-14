@@ -47,7 +47,7 @@ ESIM_GO_API_URL=https://api.esim-go.com/v2.2
 
 # 131.ru FPS (СБП)
 PAYMENT_131_BASE_URL=https://api.131.ru
-PAYMENT_131_PROJECT=ewave_acq_fps
+PAYMENT_131_PROJECT=ewave_acq
 PAYMENT_131_MERCHANT=askolskay
 PAYMENT_131_KEY_ID=prod-key-id
 PAYMENT_131_PRIVATE_PEM="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
@@ -69,7 +69,7 @@ WEBHOOK_URL=https://your-domain.com/api/webhook
 4. Скопируйте ключ в `.env`
 
 #### 131.ru (СБП)
-1. Активируйте проект в личном кабинете 131 (напр. `ewave_acq_fps`)
+1. Активируйте проект в личном кабинете 131 (напр. `ewave_acq`)
 2. Получите значения `project`, `merchant` и `keyId`
 3. Сгенерируйте RSA-ключ по инструкции провайдера и сохраните приватный ключ в `PAYMENT_131_PRIVATE_PEM`
 4. Добавьте домен приложения и webhook URL, whitelist IP `84.252.136.174,84.201.171.246`

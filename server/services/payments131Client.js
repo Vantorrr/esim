@@ -110,6 +110,22 @@ class Payments131Client {
       throw err;
     }
 
+    // Calculate Digest header (SHA-256 hash of request body)
+    const digestHash = payload
+      ? crypto.createHash('sha256').update(payload, 'utf8').digest('base64')
+      : '';
+    const digestHeader = payload ? `SHA-256=${digestHash}` : '';
+
+    // Extract host from baseURL
+    let hostHeader = '';
+    try {
+      const url = new URL(this.baseURL);
+      hostHeader = url.host;
+    } catch (e) {
+      hostHeader = 'proxy.bank131.ru'; // fallback
+    }
+
+    // Build headers object
     const headers = {
       'Content-Type': 'application/json',
       Accept: 'application/json',
@@ -119,10 +135,39 @@ class Payments131Client {
       'X-PARTNER-PROJECT': this.project,
     };
 
+    if (digestHeader) {
+      headers.Digest = digestHeader;
+    }
+    // Note: Host header is set automatically by axios, but we include it in signing string
+
+    // Build signature string according to HTTP Signature (RFC 9421)
+    // Format: (request-target): method path
+    //         header-name: header-value
+    //         ...
+    const methodLower = method.toLowerCase();
+    const signingStringParts = [
+      `(request-target): ${methodLower} ${path}`,
+      `date: ${dateHeader}`,
+    ];
+
+    if (digestHeader) {
+      signingStringParts.push(`digest: ${digestHeader}`);
+    }
+
+    signingStringParts.push(
+      `host: ${hostHeader}`,
+      `x-request-id: ${requestId}`,
+      `x-partner-merchant: ${this.merchant}`,
+      `x-partner-project: ${this.project}`
+    );
+
+    const signingString = signingStringParts.join('\n');
+
+    // Sign the signing string
     let signature;
     try {
       const signer = crypto.createSign('RSA-SHA256');
-      signer.update(payload);
+      signer.update(signingString, 'utf8');
       signer.end();
       signature = signer.sign(privateKeyObject, 'base64');
     } catch (e) {
@@ -131,7 +176,18 @@ class Payments131Client {
       throw err;
     }
 
+    // Build Signature header according to HTTP Signature spec
+    const signatureHeader = `keyId="${this.keyId}",algorithm="rsa-sha256",headers="(request-target) date${digestHeader ? ' digest' : ''} host x-request-id x-partner-merchant x-partner-project",signature="${signature}"`;
+
     headers['X-PARTNER-SIGN'] = sanitizeAscii(signature);
+    headers.Authorization = `Signature ${signatureHeader}`;
+
+    if (process.env.PAYMENT_131_DEBUG === 'true') {
+      console.log('[131] Signing string:', signingString);
+      console.log('[131] Signature header:', signatureHeader.slice(0, 100) + '...');
+      // Store for debug endpoint
+      this.__lastSigningString = signingString;
+    }
 
     return { headers, requestId };
   }
