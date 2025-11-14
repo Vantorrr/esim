@@ -44,7 +44,7 @@ router.get('/debug', async (req, res) => {
         parseError = e.message;
       }
     }
-    // Also build a real Signature header and analyze characters
+    // Also build a real signature and analyze it
     let signatureHeaderInfo = null;
     let signingStringSample = null;
     try {
@@ -52,17 +52,17 @@ router.get('/debug', async (req, res) => {
       const testPath = '/api/v1/session/init/payment';
       const testBody = JSON.stringify({ test: true });
       const { headers } = client.buildHeaders({ method: 'post', path: testPath, body: testBody });
-      const authHeader = String(headers.Authorization || '');
+      const xPartnerSign = String(headers['X-PARTNER-SIGN'] || '');
       signatureHeaderInfo = {
-        sample: authHeader.slice(0, 150),
-        length: authHeader.length,
-        hasCR: /\r/.test(authHeader),
-        hasLF: /\n/.test(authHeader),
-        nonAsciiCount: [...authHeader].map(c => c.charCodeAt(0)).filter(code => (code < 32 && code !== 9) || code >= 127).length,
-        hasXPartnerSign: Boolean(headers['X-PARTNER-SIGN']),
-        xPartnerSignLength: headers['X-PARTNER-SIGN']?.length || 0,
+        sample: xPartnerSign.slice(0, 80),
+        length: xPartnerSign.length,
+        hasCR: /\r/.test(xPartnerSign),
+        hasLF: /\n/.test(xPartnerSign),
+        nonAsciiCount: [...xPartnerSign].map(c => c.charCodeAt(0)).filter(code => (code < 32 && code !== 9) || code >= 127).length,
+        hasAuthorization: Boolean(headers.Authorization),
+        note: 'Signature is created from request body (JSON) only, not headers',
       };
-      // Try to extract signing string from client if available
+      // Extract signed payload from client if available
       if (client.__lastSigningString) {
         signingStringSample = client.__lastSigningString.slice(0, 300);
       }

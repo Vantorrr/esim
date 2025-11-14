@@ -110,64 +110,25 @@ class Payments131Client {
       throw err;
     }
 
-    // Calculate Digest header (SHA-256 hash of request body)
-    const digestHash = payload
-      ? crypto.createHash('sha256').update(payload, 'utf8').digest('base64')
-      : '';
-    const digestHeader = payload ? `SHA-256=${digestHash}` : '';
-
-    // Extract host from baseURL
-    let hostHeader = '';
-    try {
-      const url = new URL(this.baseURL);
-      hostHeader = url.host;
-    } catch (e) {
-      hostHeader = 'proxy.bank131.ru'; // fallback
-    }
-
     // Build headers object
     const headers = {
       'Content-Type': 'application/json',
       Accept: 'application/json',
-      Date: dateHeader,
       'X-Request-Id': requestId,
       'X-PARTNER-MERCHANT': this.merchant,
       'X-PARTNER-PROJECT': this.project,
     };
 
-    if (digestHeader) {
-      headers.Digest = digestHeader;
-    }
-    // Note: Host header is set automatically by axios, but we include it in signing string
-
-    // Build signature string according to HTTP Signature (RFC 9421)
-    // Format: (request-target): method path
-    //         header-name: header-value
-    //         ...
-    const methodLower = method.toLowerCase();
-    const signingStringParts = [
-      `(request-target): ${methodLower} ${path}`,
-      `date: ${dateHeader}`,
-    ];
-
-    if (digestHeader) {
-      signingStringParts.push(`digest: ${digestHeader}`);
-    }
-
-    signingStringParts.push(
-      `host: ${hostHeader}`,
-      `x-request-id: ${requestId}`,
-      `x-partner-merchant: ${this.merchant}`,
-      `x-partner-project: ${this.project}`
-    );
-
-    const signingString = signingStringParts.join('\n');
-
-    // Sign the signing string
+    // According to 131.ru documentation:
+    // Signature is created by signing the request body (JSON) with RSA-SHA256
+    // The signature is sent in X-PARTNER-SIGN header (not Authorization)
+    // No headers are included in the signature - only the JSON body
+    
+    // Sign the request body (payload)
     let signature;
     try {
       const signer = crypto.createSign('RSA-SHA256');
-      signer.update(signingString, 'utf8');
+      signer.update(payload, 'utf8');
       signer.end();
       signature = signer.sign(privateKeyObject, 'base64');
     } catch (e) {
@@ -176,20 +137,14 @@ class Payments131Client {
       throw err;
     }
 
-    // Build Signature header according to HTTP Signature spec
-    // Note: headers list uses lowercase as per RFC 9421
-    const signatureHeader = `keyId="${this.keyId}",algorithm="rsa-sha256",headers="(request-target) date${digestHeader ? ' digest' : ''} host x-request-id x-partner-merchant x-partner-project",signature="${signature}"`;
-
+    // Set signature in X-PARTNER-SIGN header (as per bank documentation)
     headers['X-PARTNER-SIGN'] = sanitizeAscii(signature);
-    // Some banks expect only X-PARTNER-SIGN, others also need Authorization
-    // Try with both for now
-    headers.Authorization = `Signature ${signatureHeader}`;
 
     if (process.env.PAYMENT_131_DEBUG === 'true') {
-      console.log('[131] Signing string:', signingString);
-      console.log('[131] Signature header:', signatureHeader.slice(0, 100) + '...');
+      console.log('[131] Signing payload (body only):', payload.slice(0, 200) + '...');
+      console.log('[131] Signature (base64):', signature.slice(0, 50) + '...');
       // Store for debug endpoint
-      this.__lastSigningString = signingString;
+      this.__lastSigningString = payload;
     }
 
     return { headers, requestId };
