@@ -222,7 +222,7 @@ class Payments131Client {
       throw new Error('Amount is required for 131 SBP payment');
     }
 
-    // Use /api/v1/session/create for accepting payments via SBP
+    // Use /api/v1/session/create for accepting payments via SBP (as per bank requirements)
     const path = '/api/v1/session/create';
 
     const paymentDetails = {
