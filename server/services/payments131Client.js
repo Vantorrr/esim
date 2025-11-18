@@ -77,7 +77,6 @@ class Payments131Client {
 
   buildHeaders({ method, path, body }) {
     const requestId = crypto.randomUUID();
-    const dateHeader = new Date().toUTCString();
     const payload = body
       ? typeof body === 'string'
         ? body
@@ -110,7 +109,7 @@ class Payments131Client {
       throw err;
     }
 
-    // Build headers object
+    // Build base headers object (no HTTP Signature, only body signature in X-PARTNER-SIGN)
     const headers = {
       'Content-Type': 'application/json',
       Accept: 'application/json',
@@ -119,12 +118,7 @@ class Payments131Client {
       'X-PARTNER-PROJECT': this.project,
     };
 
-    // According to 131.ru documentation:
-    // Signature is created by signing the request body (JSON) with RSA-SHA256
-    // The signature is sent in X-PARTNER-SIGN header (not Authorization)
-    // No headers are included in the signature - only the JSON body
-    
-    // Sign the request body (payload)
+    // Sign raw JSON payload with RSA-SHA256 and send base64 signature in X-PARTNER-SIGN
     let signature;
     try {
       const signer = crypto.createSign('RSA-SHA256');
@@ -137,14 +131,14 @@ class Payments131Client {
       throw err;
     }
 
-    // Set signature in X-PARTNER-SIGN header (as per bank documentation)
     headers['X-PARTNER-SIGN'] = sanitizeAscii(signature);
 
     if (process.env.PAYMENT_131_DEBUG === 'true') {
-      console.log('[131] Signing payload (body only):', payload.slice(0, 200) + '...');
+      console.log('[131] Signing payload (JSON body only):', payload.slice(0, 200));
       console.log('[131] Signature (base64):', signature.slice(0, 50) + '...');
       // Store for debug endpoint
       this.__lastSigningString = payload;
+      this.__lastSignatureHeader = headers['X-PARTNER-SIGN'];
     }
 
     return { headers, requestId };
@@ -227,12 +221,9 @@ class Payments131Client {
     if (!amount) {
       throw new Error('Amount is required for 131 SBP payment');
     }
-    if (!orderId) {
-      throw new Error('orderId is required for 131 SBP payment');
-    }
 
-    // Use /api/v1/session/init/payment for accepting payments via SBP
-    const path = '/api/v1/session/init/payment';
+    // Use /api/v1/session/create for accepting payments via SBP
+    const path = '/api/v1/session/create';
 
     const paymentDetails = {
       type: 'faster_payment_system',
@@ -241,16 +232,16 @@ class Payments131Client {
       },
     };
 
+    const customerRef =
+      (customer && customer.reference) || orderId || `ewave_${Date.now()}`;
+
     const payload = {
-      merchant_order_id: orderId,
       payment_details: paymentDetails,
       amount_details: {
         amount: formatAmount(amount),
         currency: (currency || 'RUB').toLowerCase(),
       },
-      customer: customer && customer.reference ? customer : { reference: orderId },
-      payment_options: successUrl ? { return_url: successUrl } : undefined,
-      metadata: metadata || {},
+      customer: customer || { reference: customerRef },
       ...extra,
     };
 
