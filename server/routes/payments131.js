@@ -2,6 +2,8 @@ const express = require('express');
 const crypto = require('crypto');
 const router = express.Router();
 const payments131Client = require('../services/payments131Client');
+const esimGoApi = require('../services/esimGoApi');
+const userEsimRepo = require('../services/userEsimRepo');
 const fs = require('fs');
 
 // In-memory store for SBP QR / deeplink by sessionId
@@ -191,6 +193,32 @@ router.post('/sbp/create-payment', async (req, res) => {
       customer,
       extra,
     });
+    const sessionId = response.sessionId || response.session?.id;
+
+    // Сохраняем pending-запись в БД, чтобы потом привязать eSIM к Telegram-пользователю
+    const telegramId =
+      (extra && (extra.telegramId || extra.telegram_id)) ||
+      (metadata && (metadata.telegramId || metadata.telegram_id)) ||
+      (customer && (customer.telegramId || customer.telegram_id)) ||
+      (customer && customer.reference);
+    const packageId =
+      (metadata && (metadata.packageId || metadata.package_id)) ||
+      (extra && (extra.packageId || extra.package_id));
+
+    if (telegramId && packageId && sessionId) {
+      userEsimRepo
+        .createPending({
+          telegramId,
+          packageId,
+          paymentSessionId: sessionId,
+          paymentOrderId: finalOrderId,
+          amountRub: amount,
+          currency,
+        })
+        .catch((err) => {
+          console.warn('[userEsims] createPending error:', err.message);
+        });
+    }
 
     res.json({ orderId: finalOrderId, ...response });
   } catch (error) {

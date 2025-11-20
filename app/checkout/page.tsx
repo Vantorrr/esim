@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import axios from 'axios';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getPackageDetails, createPayment131SBP, getPayment131SBPLink } from '@/lib/api';
-import { hapticFeedback, showBackButton, hideBackButton } from '@/lib/telegram';
+import { hapticFeedback, showBackButton, hideBackButton, getTelegramUser } from '@/lib/telegram';
 import LoadingScreen from '@/components/LoadingScreen';
 import CoverageModal from '@/components/CoverageModal';
 
@@ -59,6 +59,8 @@ function CheckoutContent() {
       const orderId = `esim_${Date.now()}`;
       const successUrl = `${window.location.origin}/success?order=${orderId}`;
       const failUrl = `${window.location.origin}/checkout?package=${pkg.id}&status=payment_failed`;
+      const tgUser = getTelegramUser();
+      const telegramId = tgUser?.id;
 
       const payment = await createPayment131SBP({
         amount: amountRub,
@@ -68,9 +70,16 @@ function CheckoutContent() {
         successUrl,
         failUrl,
         metadata: {
+          telegramId,
           packageId: pkg.id,
           packageName: pkg.name,
           region: pkg.region,
+        },
+        customer: {
+          reference: telegramId ? String(telegramId) : orderId,
+        },
+        extra: {
+          telegramId,
         },
       });
 

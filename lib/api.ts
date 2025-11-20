@@ -55,6 +55,8 @@ export const createPayment131SBP = async (payload: {
   metadata?: Record<string, any>;
   customer?: Record<string, any>;
   extra?: Record<string, any>;
+  telegramId?: string | number;
+  packageId?: string;
 }) => {
   const response = await api.post('/payments/131/sbp/create-payment', payload);
   return response.data;
