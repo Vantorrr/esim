@@ -8,8 +8,10 @@ const fs = require('fs');
 // NOTE: good enough for this app; for production-scale use persistent storage.
 const sbpQrStore = new Map();
 
-const DEFAULT_WHITELIST = ['84.252.136.174', '84.201.171.246'];
-const whitelist = (process.env.PAYMENT_131_WEBHOOK_WHITELIST || DEFAULT_WHITELIST.join(','))
+// Optional IP whitelist for incoming webhooks from Bank131.
+// If PAYMENT_131_WEBHOOK_WHITELIST is not set, all IPs are allowed.
+const rawWebhookWhitelist = process.env.PAYMENT_131_WEBHOOK_WHITELIST || '';
+const whitelist = rawWebhookWhitelist
   .split(',')
   .map((ip) => ip.trim())
   .filter(Boolean);
