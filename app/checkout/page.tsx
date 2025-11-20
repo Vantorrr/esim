@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, Suspense } from 'react';
+import axios from 'axios';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getPackageDetails, createPayment131SBP, getPayment131SBPLink } from '@/lib/api';
 import { hapticFeedback, showBackButton, hideBackButton } from '@/lib/telegram';
@@ -93,9 +94,9 @@ function CheckoutContent() {
         const sessionId = payment?.sessionId || payment?.session?.id;
 
         if (sessionId) {
-          try {
-            const maxAttempts = 30;
-            for (let i = 0; i < maxAttempts; i++) {
+          const maxAttempts = 30;
+          for (let i = 0; i < maxAttempts; i++) {
+            try {
               const linkData = await getPayment131SBPLink(sessionId);
               const qrLink =
                 linkData?.qrDeeplink ||
@@ -106,12 +107,18 @@ function CheckoutContent() {
                 window.location.href = qrLink;
                 return;
               }
-
-              // Если ещё не готово, подождать и попробовать снова
-              await new Promise((resolve) => setTimeout(resolve, 1000));
+            } catch (pollErr: any) {
+              // 404 NOT_READY — просто ждём и пробуем ещё раз
+              if (axios.isAxiosError(pollErr) && pollErr.response?.status === 404) {
+                // continue to next iteration
+              } else {
+                console.warn('SBP polling for QR failed', pollErr);
+                break;
+              }
             }
-          } catch (pollErr) {
-            console.warn('SBP polling for QR failed', pollErr);
+
+            // Если ещё не готово, подождать и попробовать снова
+            await new Promise((resolve) => setTimeout(resolve, 1000));
           }
         }
 
