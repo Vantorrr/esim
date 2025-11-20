@@ -72,3 +72,10 @@ export const getPayment131SBPLink = async (sessionId: string) => {
   return response.data;
 };
 
+export const getUserEsims = async (telegramId: string | number) => {
+  const response = await api.get('/user-esims/my-esims', {
+    params: { telegramId },
+  });
+  return response.data;
+};
+

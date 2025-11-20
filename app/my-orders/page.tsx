@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import BottomNav from '@/components/BottomNav';
 import ESIMCard from '@/components/ESIMCard';
+import { getTelegramUser } from '@/lib/telegram';
+import { getUserEsims, getPackageDetails } from '@/lib/api';
 
 interface ESIMData {
   id: string;
@@ -28,24 +30,78 @@ export default function MyOrdersPage() {
   const [purchases, setPurchases] = useState<any[]>([]);
 
   useEffect(() => {
-    // Загружаем eSIM и историю покупок из localStorage
+    // Загружаем eSIM и историю покупок из бэкенда по Telegram ID
     const loadData = async () => {
       try {
-        // Динамический импорт для избежания SSR проблем
-        const { getStoredESIMs, getStoredPurchases, initDemoData } = await import('@/lib/esimStorage');
-        
-        let storedESIMs = getStoredESIMs();
-        let storedPurchases = getStoredPurchases();
-        
-        // Если нет данных, инициализируем демо-данные
-        if (storedESIMs.length === 0) {
-          initDemoData();
-          storedESIMs = getStoredESIMs();
-          storedPurchases = getStoredPurchases();
+        const tgUser = getTelegramUser();
+        if (!tgUser?.id) {
+          setLoading(false);
+          return;
         }
-        
-        setEsims(storedESIMs);
-        setPurchases(storedPurchases);
+
+        const data = await getUserEsims(tgUser.id);
+        const rows = data.esims || [];
+
+        // Маппим записи из БД + пакет из каталога в форму для ESIMCard
+        const mappedEsims: ESIMData[] = [];
+        const mappedPurchases: any[] = [];
+
+        for (const row of rows) {
+          const pkgId = row.packageId || row.package_id;
+          let pkg: any = null;
+          try {
+            if (pkgId) {
+              pkg = await getPackageDetails(pkgId);
+            }
+          } catch (e) {
+            console.warn('Failed to load package details for', pkgId);
+          }
+
+          const country = pkg?.countryName || 'Пакет eSIM';
+          const countryCode = (pkg?.country || '🌍').toString();
+          const packageName = pkg?.name || pkg?.description || pkgId || 'eSIM';
+          const validity = Number(pkg?.validity) || 7;
+
+          // Парсим объём данных в GB, если есть
+          let dataTotal = 1;
+          if (typeof pkg?.data === 'string') {
+            const m = pkg.data.match(/(\d+(?:\.\d+)?)\s*GB/i);
+            if (m) dataTotal = parseFloat(m[1]);
+          }
+
+          const paymentStatus = (row.paymentStatus || row.payment_status || 'pending') as string;
+          const status: 'active' | 'inactive' | 'expired' =
+            paymentStatus === 'succeeded' ? 'active' : 'inactive';
+
+          mappedEsims.push({
+            id: String(row.id),
+            country,
+            countryCode,
+            packageName,
+            dataTotal,
+            dataUsed: 0,
+            daysTotal: validity,
+            daysRemaining: validity,
+            status,
+            activatedAt: undefined,
+            expiresAt: undefined,
+          });
+
+          mappedPurchases.push({
+            id: row.id,
+            country,
+            countryCode,
+            packageName,
+            date: row.createdAt || row.created_at,
+            price: row.amountRub || row.amount_rub || 0,
+            currency: row.currency || 'RUB',
+            status: paymentStatus === 'succeeded' ? 'completed' : 'pending',
+            paymentMethod: 'СБП (Банк 131)',
+          });
+        }
+
+        setEsims(mappedEsims);
+        setPurchases(mappedPurchases);
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {

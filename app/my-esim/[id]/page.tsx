@@ -4,6 +4,8 @@ import { useRouter, useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import BottomNav from '@/components/BottomNav';
 import QRCode from 'qrcode';
+import { getTelegramUser } from '@/lib/telegram';
+import { getUserEsims } from '@/lib/api';
 
 interface ESIMDetails {
   id: string;
@@ -31,45 +33,66 @@ export default function ESIMDetailsPage() {
   const [showQR, setShowQR] = useState(false);
 
   useEffect(() => {
-    // TODO: Загрузить детали eSIM из API
-    // Пока показываем демо-данные
-    setTimeout(async () => {
-      const demoData: ESIMDetails = {
-        id: params.id as string,
-        country: 'Турция',
-        countryCode: 'TR',
-        packageName: 'Merhaba • 3GB',
-        dataTotal: 3,
-        dataUsed: 2,
-        daysTotal: 7,
-        daysRemaining: 5,
-        status: 'active',
-        activatedAt: '2025-10-25T12:00:00Z',
-        expiresAt: '2025-11-01T23:59:59Z',
-        iccid: '8901234567890123456',
-        qrData: 'LPA:1$example.com$ACTIVATION_CODE',
-        apn: 'internet',
-      };
-
-      setEsim(demoData);
-
-      // Генерируем QR-код
+    const load = async () => {
       try {
-        const qrUrl = await QRCode.toDataURL(demoData.qrData, {
-          width: 300,
-          margin: 2,
-          color: {
-            dark: '#000000',
-            light: '#ffffff',
-          },
-        });
-        setQrCodeUrl(qrUrl);
-      } catch (err) {
-        console.error('Ошибка генерации QR-кода:', err);
-      }
+        const tgUser = getTelegramUser();
+        if (!tgUser?.id) {
+          setLoading(false);
+          return;
+        }
+        const data = await getUserEsims(tgUser.id);
+        const rows = data.esims || [];
+        const row = rows.find((r: any) => String(r.id) === String(params.id));
+        if (!row) {
+          setLoading(false);
+          return;
+        }
 
-      setLoading(false);
-    }, 800);
+        const qrPayload =
+          row.qrData?.qrCode ||
+          row.qrData?.qrCodeUrl ||
+          row.qrData?.activationCode ||
+          row.qrDeeplink ||
+          '';
+
+        const details: ESIMDetails = {
+          id: String(row.id),
+          country: row.country || 'eSIM',
+          countryCode: row.countryCode || '🌍',
+          packageName: row.packageName || row.packageId || row.package_id || 'Пакет eSIM',
+          dataTotal: row.dataTotal || 1,
+          dataUsed: 0,
+          daysTotal: row.daysTotal || 7,
+          daysRemaining: row.daysRemaining || 7,
+          status: row.paymentStatus === 'succeeded' ? 'active' : 'inactive',
+          iccid: row.qrData?.iccid || '',
+          qrData: qrPayload,
+          apn: row.qrData?.apn || undefined,
+        };
+
+        setEsim(details);
+
+        if (qrPayload) {
+          try {
+            const qrUrl = await QRCode.toDataURL(qrPayload, {
+              width: 300,
+              margin: 2,
+              color: {
+                dark: '#000000',
+                light: '#ffffff',
+              },
+            });
+            setQrCodeUrl(qrUrl);
+          } catch (err) {
+            console.error('Ошибка генерации QR-кода:', err);
+          }
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
   }, [params.id]);
 
   if (loading || !esim) {

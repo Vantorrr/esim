@@ -329,6 +329,38 @@ router.post('/webhook', async (req, res) => {
       }
     }
 
+    // Handle payment_finished → создаём eSIM-заказ и помечаем оплату как успешную
+    if (body.type === 'payment_finished' && body.session && body.session.id) {
+      const sessionId = body.session.id;
+      const paymentStatus = body.payment_status || body.status || 'succeeded';
+      console.log('[131] payment_finished received for session', sessionId, 'status:', paymentStatus);
+      if (paymentStatus === 'succeeded') {
+        // Fire-and-forget: создаём заказ eSIM в фоне
+        userEsimRepo
+          .findBySessionId(sessionId)
+          .then(async (record) => {
+            if (!record) {
+              console.warn('[userEsims] payment_finished but no record for session', sessionId);
+              return;
+            }
+            if (record.esim_order_id) {
+              // уже привязано
+              await userEsimRepo.markPaidAndAttachEsim(sessionId, record.esim_order_id, 'succeeded');
+              return;
+            }
+            try {
+              const order = await esimGoApi.createOrder(record.package_id, 1);
+              const esimOrderId = order.id || order.orderId || order.order_id;
+              await userEsimRepo.markPaidAndAttachEsim(sessionId, esimOrderId, 'succeeded');
+              console.log('[userEsims] eSIM order created and attached for session', sessionId, 'orderId:', esimOrderId);
+            } catch (e) {
+              console.error('[userEsims] Failed to create eSIM order for session', sessionId, e.message);
+            }
+          })
+          .catch((err) => console.error('[userEsims] findBySessionId in payment_finished failed:', err.message));
+      }
+    }
+
     // Here: enqueue processing, ensure idempotency by event/payment id
 
     res.status(200).json({ ok: true });
