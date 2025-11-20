@@ -79,3 +79,10 @@ export const getUserEsims = async (telegramId: string | number) => {
   return response.data;
 };
 
+export const getLastCompletedUserEsim = async (telegramId: string | number) => {
+  const response = await api.get('/user-esims/last-completed', {
+    params: { telegramId },
+  });
+  return response.data;
+};
+

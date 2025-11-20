@@ -145,11 +145,37 @@ async function getByTelegramId(telegramId) {
   }
 }
 
+async function getLastCompletedByTelegramId(telegramId) {
+  if (!telegramId) return null;
+  try {
+    await ensureTable();
+    const res = await query(
+      `
+      SELECT *
+      FROM user_esims
+      WHERE telegram_id = $1
+        AND payment_status = 'succeeded'
+      ORDER BY updated_at DESC
+      LIMIT 1;
+      `,
+      [telegramId]
+    );
+    return res.rows[0] || null;
+  } catch (e) {
+    if (e.message && e.message.includes('DB not configured')) {
+      return null;
+    }
+    console.error('[userEsimRepo] getLastCompletedByTelegramId error:', e.message);
+    return null;
+  }
+}
+
 module.exports = {
   createPending,
   findBySessionId,
   markPaidAndAttachEsim,
   getByTelegramId,
+  getLastCompletedByTelegramId,
 };
 
 

@@ -64,6 +64,60 @@ router.get('/my-esims', async (req, res) => {
   }
 });
 
+// Получить последний успешно оплаченный eSIM пользователя
+router.get('/last-completed', async (req, res) => {
+  try {
+    const telegramId = req.query.telegramId || req.query.userId;
+    if (!telegramId) {
+      return res.status(400).json({
+        success: false,
+        error: 'telegramId is required',
+      });
+    }
+
+    const row = await userEsimRepo.getLastCompletedByTelegramId(telegramId);
+    if (!row) {
+      return res.json({ success: true, esim: null });
+    }
+
+    let order = null;
+    let qr = null;
+    if (row.esim_order_id) {
+      try {
+        order = await esimGoApi.getOrder(row.esim_order_id);
+        qr = await esimGoApi.getOrderQR(row.esim_order_id);
+      } catch (e) {
+        console.warn('[User eSIMs] getLastCompleted: failed to load order/qr', e.message);
+      }
+    }
+
+    res.json({
+      success: true,
+      esim: {
+        id: row.id,
+        telegramId: row.telegram_id,
+        packageId: row.package_id,
+        paymentSessionId: row.payment_session_id,
+        paymentStatus: row.payment_status,
+        paymentOrderId: row.payment_order_id,
+        amountRub: row.amount_rub,
+        currency: row.currency,
+        esimOrderId: row.esim_order_id,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        esimOrder: order,
+        qrData: qr,
+      },
+    });
+  } catch (error) {
+    console.error('[User eSIMs] last-completed Error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
 // Получить статус конкретной eSIM
 router.get('/esim-status/:iccid', async (req, res) => {
   try {

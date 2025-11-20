@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { initTelegramSDK } from '@/lib/telegram';
+import { useRouter } from 'next/navigation';
+import { initTelegramSDK, getTelegramUser } from '@/lib/telegram';
 import Header from '@/components/Header';
 import CountrySelector from '@/components/CountrySelector';
 import PackageList from '@/components/PackageList';
@@ -12,8 +13,10 @@ import BottomNav from '@/components/BottomNav';
 import PhoneIcon from '@/components/icons/PhoneIcon';
 import DollarIcon from '@/components/icons/DollarIcon';
 import GlobeIcon from '@/components/icons/GlobeIcon';
+import { getLastCompletedUserEsim } from '@/lib/api';
 
 export default function Home() {
+  const router = useRouter();
   const [isReady, setIsReady] = useState(false);
   const [showLoading, setShowLoading] = useState(true);
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
@@ -25,6 +28,31 @@ export default function Home() {
       setIsReady(true);
     }, 100);
   }, []);
+
+  useEffect(() => {
+    const checkLastEsim = async () => {
+      try {
+        const tgUser = getTelegramUser();
+        if (!tgUser?.id) return;
+
+        const data = await getLastCompletedUserEsim(tgUser.id);
+        const esim = data?.esim;
+        if (!esim) return;
+
+        const key = `lastEsimShown_${esim.id}`;
+        if (sessionStorage.getItem(key)) return;
+
+        sessionStorage.setItem(key, '1');
+        router.push(`/my-esim/${esim.id}`);
+      } catch (e) {
+        // тихо игнорируем
+      }
+    };
+
+    if (isReady) {
+      checkLastEsim();
+    }
+  }, [isReady, router]);
 
   if (showLoading) {
     return <LoadingScreen onFinish={() => setShowLoading(false)} />;
