@@ -251,7 +251,7 @@ class Payments131Client {
 
     const payloadString = JSON.stringify(payload);
 
-    // Step 1: create payment session
+    // Step 1: create payment session (per docs payment-fps-qr)
     const createResponse = await this.request('post', '/api/v1/session/create', payloadString);
 
     const sessionId = createResponse?.session?.id;
@@ -260,17 +260,42 @@ class Payments131Client {
       return { status: 'error', error: { description: '131 did not return session id', code: 'no_session' }, raw: createResponse };
     }
 
-    // Step 2: start payment for this session (per typical flow)
-    // According to docs, session/start/payment takes session_id and returns updated session/payment info.
-    const startPayload = JSON.stringify({ session_id: sessionId });
-    const startResponse = await this.request('post', '/api/v1/session/start/payment', startPayload);
+    // Step 2: start payment for this session (per typical flow for SBP)
+    // According to docs, session/start/payment can (optionally) receive the same payment_details,
+    // amount_details, customer and payment_options.return_url.
+    const startBody = {
+      session_id: sessionId,
+      payment_details: paymentDetails,
+      amount_details: payload.amount_details,
+      customer: payload.customer,
+      payment_options: successUrl ? { return_url: successUrl } : undefined,
+    };
 
-    // Merge both responses so frontend has access to session id and any payment links/qr from startResponse
+    // Remove undefined fields
+    Object.keys(startBody).forEach((key) => {
+      if (startBody[key] === undefined) {
+        delete startBody[key];
+      }
+    });
+
+    const startResponse = await this.request('post', '/api/v1/session/start/payment', JSON.stringify(startBody));
+
+    // Try to extract QR deeplink for SBP payments when bank is configured for payment-fps-qr
+    const qrDeeplink =
+      startResponse?.session?.customer_interaction?.inform?.qr?.content ||
+      startResponse?.session?.customer_interaction?.inform?.fps_qr?.content;
+
     return {
       orderId: orderId || customerRef,
-      session: createResponse.session || startResponse.session,
-      createResponse,
-      startResponse,
+      sessionId,
+      status: startResponse?.status || createResponse?.status,
+      paymentUrl: qrDeeplink,
+      qrDeeplink,
+      session: startResponse?.session || createResponse?.session,
+      raw: {
+        createResponse,
+        startResponse,
+      },
     };
   }
 
