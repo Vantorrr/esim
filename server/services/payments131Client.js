@@ -222,9 +222,6 @@ class Payments131Client {
       throw new Error('Amount is required for 131 SBP payment');
     }
 
-    // Use /api/v1/session/create for accepting payments via SBP (as per bank requirements)
-    const path = '/api/v1/session/create';
-
     const paymentDetails = {
       type: 'faster_payment_system',
       faster_payment_system: {
@@ -254,7 +251,27 @@ class Payments131Client {
 
     const payloadString = JSON.stringify(payload);
 
-    return this.request('post', path, payloadString);
+    // Step 1: create payment session
+    const createResponse = await this.request('post', '/api/v1/session/create', payloadString);
+
+    const sessionId = createResponse?.session?.id;
+    if (!sessionId) {
+      // If bank didn't return session, just bubble raw response
+      return { status: 'error', error: { description: '131 did not return session id', code: 'no_session' }, raw: createResponse };
+    }
+
+    // Step 2: start payment for this session (per typical flow)
+    // According to docs, session/start/payment takes session_id and returns updated session/payment info.
+    const startPayload = JSON.stringify({ session_id: sessionId });
+    const startResponse = await this.request('post', '/api/v1/session/start/payment', startPayload);
+
+    // Merge both responses so frontend has access to session id and any payment links/qr from startResponse
+    return {
+      orderId: orderId || customerRef,
+      session: createResponse.session || startResponse.session,
+      createResponse,
+      startResponse,
+    };
   }
 
   async getSbpPaymentStatus(sessionId) {
