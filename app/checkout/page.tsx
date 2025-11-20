@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getPackageDetails, createPayment131SBP } from '@/lib/api';
+import { getPackageDetails, createPayment131SBP, getPayment131SBPLink } from '@/lib/api';
 import { hapticFeedback, showBackButton, hideBackButton } from '@/lib/telegram';
 import LoadingScreen from '@/components/LoadingScreen';
 import CoverageModal from '@/components/CoverageModal';
@@ -89,6 +89,32 @@ function CheckoutContent() {
       } else if (payment?.qr?.link) {
         window.location.href = payment.qr.link;
       } else {
+        // For SBP QR flow, link may arrive asynchronously via action_required webhook.
+        const sessionId = payment?.sessionId || payment?.session?.id;
+
+        if (sessionId) {
+          try {
+            const maxAttempts = 30;
+            for (let i = 0; i < maxAttempts; i++) {
+              const linkData = await getPayment131SBPLink(sessionId);
+              const qrLink =
+                linkData?.qrDeeplink ||
+                linkData?.paymentUrl ||
+                linkData?.customer_interaction?.inform?.qr?.content;
+
+              if (qrLink) {
+                window.location.href = qrLink;
+                return;
+              }
+
+              // Если ещё не готово, подождать и попробовать снова
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
+          } catch (pollErr) {
+            console.warn('SBP polling for QR failed', pollErr);
+          }
+        }
+
         console.warn('SBP payment response missing redirect URL', payment);
         alert('Не удалось получить ссылку на оплату СБП. Свяжитесь с поддержкой.');
       }

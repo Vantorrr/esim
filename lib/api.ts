@@ -65,3 +65,8 @@ export const getPayment131SBPStatus = async (orderId: string) => {
   return response.data;
 };
 
+export const getPayment131SBPLink = async (sessionId: string) => {
+  const response = await api.get(`/payments/131/sbp/session/${sessionId}/link`);
+  return response.data;
+};
+

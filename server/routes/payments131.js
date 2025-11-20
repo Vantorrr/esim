@@ -4,6 +4,10 @@ const router = express.Router();
 const payments131Client = require('../services/payments131Client');
 const fs = require('fs');
 
+// In-memory store for SBP QR / deeplink by sessionId
+// NOTE: good enough for this app; for production-scale use persistent storage.
+const sbpQrStore = new Map();
+
 const DEFAULT_WHITELIST = ['84.252.136.174', '84.201.171.246'];
 const whitelist = (process.env.PAYMENT_131_WEBHOOK_WHITELIST || DEFAULT_WHITELIST.join(','))
   .split(',')
@@ -252,6 +256,34 @@ router.post('/webhook', async (req, res) => {
       console.log('[131] webhook received (no signature header configured)');
     }
 
+    const body = req.body || {};
+
+    // Store SBP QR deeplink from action_required webhook for later retrieval by sessionId
+    if (body.type === 'action_required' && body.session && body.session.id) {
+      const sessionId = body.session.id;
+      const acquiring = Array.isArray(body.session.acquiring_payments)
+        ? body.session.acquiring_payments[0]
+        : null;
+      const qrContent =
+        acquiring &&
+        acquiring.customer_interaction &&
+        acquiring.customer_interaction.inform &&
+        acquiring.customer_interaction.inform.qr &&
+        acquiring.customer_interaction.inform.qr.content;
+
+      if (qrContent) {
+        sbpQrStore.set(sessionId, {
+          sessionId,
+          paymentId: acquiring.id,
+          qrDeeplink: qrContent,
+          updatedAt: new Date().toISOString(),
+        });
+        console.log('[131] stored SBP QR deeplink for session', sessionId);
+      } else {
+        console.log('[131] action_required webhook without QR content for session', sessionId);
+      }
+    }
+
     // Here: enqueue processing, ensure idempotency by event/payment id
 
     res.status(200).json({ ok: true });
@@ -260,6 +292,16 @@ router.post('/webhook', async (req, res) => {
     // Do not fail acknowledgment
     res.status(200).json({ ok: false });
   }
+});
+
+// GET stored SBP QR deeplink by sessionId (used by frontend polling)
+router.get('/sbp/session/:sessionId/link', (req, res) => {
+  const { sessionId } = req.params;
+  const data = sbpQrStore.get(sessionId);
+  if (!data) {
+    return res.status(404).json({ error: 'NOT_READY' });
+  }
+  return res.json(data);
 });
 
 module.exports = router;
