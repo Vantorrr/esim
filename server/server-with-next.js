@@ -21,6 +21,7 @@ app.prepare().then(() => {
   // API Routes
   server.use('/api/esim', require('./routes/esim'));
   server.use('/api/payments/131', require('./routes/payments131'));
+  server.use('/api/user-esims', require('./routes/user-esims'));
   server.use('/api/webhook', require('./routes/webhook'));
   server.use('/api/webhook', require('./routes/esimGoWebhook'));
   server.use('/api/bot', require('./routes/bot'));

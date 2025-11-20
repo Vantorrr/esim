@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const esimRoutes = require('./routes/esim');
 const payments131Routes = require('./routes/payments131');
+const userEsimsRoutes = require('./routes/user-esims');
 const webhookRoutes = require('./routes/webhook');
 const esimGoWebhookRoutes = require('./routes/esimGoWebhook');
 const botRoutes = require('./routes/bot');
@@ -32,6 +33,7 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api/esim', esimRoutes);
 app.use('/api/payments/131', payments131Routes);
+app.use('/api/user-esims', userEsimsRoutes);
 app.use('/api/webhook', webhookRoutes);
 app.use('/api/webhook', esimGoWebhookRoutes);
 app.use('/api/bot', botRoutes);
