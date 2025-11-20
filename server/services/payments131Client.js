@@ -308,6 +308,15 @@ class Payments131Client {
     return this.request('get', path);
   }
 
+  async confirmSession(sessionId) {
+    if (!sessionId) {
+      throw new Error('sessionId is required to confirm 131 payment session');
+    }
+    const payload = JSON.stringify({ session_id: sessionId });
+    const path = '/api/v1/session/confirm';
+    return this.request('post', path, payload);
+  }
+
   async cancelSbpPayment(orderId, reason) {
     if (!this.cancelPathTemplate) {
       throw new Error('Cancel path is not configured for 131 SBP');

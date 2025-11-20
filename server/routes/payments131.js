@@ -260,6 +260,21 @@ router.post('/webhook', async (req, res) => {
 
     const body = req.body || {};
 
+    // Handle ready_to_confirm: confirm session to move flow forward (per docs step 5)
+    if (body.type === 'ready_to_confirm' && body.session && body.session.id) {
+      const sessionId = body.session.id;
+      console.log('[131] ready_to_confirm received, sending session/confirm for session', sessionId);
+      // Fire-and-forget, не блокируем ответ вебхука
+      payments131Client
+        .confirmSession(sessionId)
+        .then(() => {
+          console.log('[131] session/confirm sent successfully for', sessionId);
+        })
+        .catch((err) => {
+          console.error('[131] session/confirm failed for', sessionId, err.message);
+        });
+    }
+
     // Store SBP QR deeplink from action_required webhook for later retrieval by sessionId
     if (body.type === 'action_required' && body.session && body.session.id) {
       const sessionId = body.session.id;
