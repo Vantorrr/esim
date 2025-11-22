@@ -95,9 +95,18 @@ function CheckoutContent() {
         payment?.redirect?.url;
 
       if (redirectUrl) {
-        window.location.href = redirectUrl;
+        // Открываем СБП ссылку через Telegram WebApp API
+        if (window.Telegram?.WebApp?.openLink) {
+          window.Telegram.WebApp.openLink(redirectUrl);
+        } else {
+          window.location.href = redirectUrl;
+        }
       } else if (payment?.qr?.link) {
-        window.location.href = payment.qr.link;
+        if (window.Telegram?.WebApp?.openLink) {
+          window.Telegram.WebApp.openLink(payment.qr.link);
+        } else {
+          window.location.href = payment.qr.link;
+        }
       } else {
         // For SBP QR flow, link may arrive asynchronously via action_required webhook.
         const sessionId = payment?.sessionId || payment?.session?.id;
@@ -113,7 +122,15 @@ function CheckoutContent() {
                 linkData?.customer_interaction?.inform?.qr?.content;
 
               if (qrLink) {
-                window.location.href = qrLink;
+                // Открываем через Telegram API
+                if (window.Telegram?.WebApp?.openLink) {
+                  window.Telegram.WebApp.openLink(qrLink);
+                } else {
+                  window.location.href = qrLink;
+                }
+                
+                // Перенаправляем на страницу ожидания
+                router.push(`/payment-pending?session=${sessionId}&package=${pkg.id}`);
                 return;
               }
             } catch (pollErr: any) {

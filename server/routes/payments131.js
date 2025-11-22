@@ -355,6 +355,8 @@ router.post('/webhook', async (req, res) => {
               console.log('[userEsims] eSIM order created and attached for session', sessionId, 'orderId:', esimOrderId);
             } catch (e) {
               console.error('[userEsims] Failed to create eSIM order for session', sessionId, e.message);
+              // Помечаем как оплаченный, но без eSIM - повторим позже через retry endpoint
+              await userEsimRepo.markPaidAndAttachEsim(sessionId, null, 'succeeded');
             }
           })
           .catch((err) => console.error('[userEsims] findBySessionId in payment_finished failed:', err.message));

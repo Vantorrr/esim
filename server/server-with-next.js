@@ -23,6 +23,7 @@ app.prepare().then(() => {
   server.use('/api/payments/131', require('./routes/payments131'));
   server.use('/api/user-esims', require('./routes/user-esims'));
   server.use('/api/test-payments', require('./routes/test-payments'));
+  server.use('/api/retry-esim', require('./routes/retry-esim'));
   server.use('/api/webhook', require('./routes/webhook'));
   server.use('/api/webhook', require('./routes/esimGoWebhook'));
   server.use('/api/bot', require('./routes/bot'));
