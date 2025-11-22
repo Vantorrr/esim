@@ -205,19 +205,31 @@ router.post('/sbp/create-payment', async (req, res) => {
       (metadata && (metadata.packageId || metadata.package_id)) ||
       (extra && (extra.packageId || extra.package_id));
 
+    console.log('[131] Payment created - telegramId:', telegramId, 'packageId:', packageId, 'sessionId:', sessionId);
+    console.log('[131] Request data - extra:', JSON.stringify(extra), 'metadata:', JSON.stringify(metadata), 'customer:', JSON.stringify(customer));
+
     if (telegramId && packageId && sessionId) {
       userEsimRepo
         .createPending({
-          telegramId,
-          packageId,
+          telegramId: String(telegramId),
+          packageId: String(packageId),
           paymentSessionId: sessionId,
           paymentOrderId: finalOrderId,
           amountRub: amount,
           currency,
         })
+        .then(() => {
+          console.log('[userEsims] createPending SUCCESS for session', sessionId);
+        })
         .catch((err) => {
-          console.warn('[userEsims] createPending error:', err.message);
+          console.error('[userEsims] createPending ERROR:', err.message, err.stack);
         });
+    } else {
+      console.warn('[userEsims] NOT creating pending record - missing data:', {
+        hasTelegramId: !!telegramId,
+        hasPackageId: !!packageId,
+        hasSessionId: !!sessionId,
+      });
     }
 
     res.json({ orderId: finalOrderId, ...response });

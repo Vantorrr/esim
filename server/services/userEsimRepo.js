@@ -39,9 +39,28 @@ async function createPending({
   amountRub,
   currency,
 }) {
-  if (!telegramId || !packageId || !paymentSessionId) return null;
+  console.log('[userEsimRepo] createPending called with:', {
+    telegramId,
+    packageId,
+    paymentSessionId,
+    paymentOrderId,
+    amountRub,
+    currency,
+  });
+  
+  if (!telegramId || !packageId || !paymentSessionId) {
+    console.warn('[userEsimRepo] createPending - missing required fields:', {
+      hasTelegramId: !!telegramId,
+      hasPackageId: !!packageId,
+      hasSessionId: !!paymentSessionId,
+    });
+    return null;
+  }
+  
   try {
     await ensureTable();
+    console.log('[userEsimRepo] Table ensured, inserting record...');
+    
     const res = await query(
       `
       INSERT INTO user_esims (
@@ -66,13 +85,15 @@ async function createPending({
       `,
       [telegramId, packageId, paymentSessionId, paymentOrderId, amountRub || null, currency || 'rub']
     );
+    
+    console.log('[userEsimRepo] Record created/updated:', res.rows[0]);
     return res.rows[0];
   } catch (e) {
     if (e.message && e.message.includes('DB not configured')) {
       console.warn('[userEsimRepo] DB not configured, skip createPending');
       return null;
     }
-    console.error('[userEsimRepo] createPending error:', e.message);
+    console.error('[userEsimRepo] createPending error:', e.message, e.stack);
     return null;
   }
 }
