@@ -55,6 +55,15 @@ function CheckoutContent() {
     hapticFeedback('medium');
 
     try {
+      const tgUser = getTelegramUser();
+      const telegramId = tgUser?.id;
+
+      if (!telegramId) {
+        alert('Ошибка: Не удалось определить пользователя Telegram. Пожалуйста, перезапустите приложение.');
+        setProcessing(false);
+        return;
+      }
+
       const amountRub = pkg.priceRub || Math.round(pkg.price * 95);
       const orderId = `esim_${Date.now()}`;
       const successUrl = `${window.location.origin}/success?order=${orderId}`;
