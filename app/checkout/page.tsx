@@ -363,12 +363,18 @@ function CheckoutContent() {
 
           <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-4">
             <div className="flex items-center gap-3">
-              <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center border-2 border-primary/20">
-                <span className="text-3xl font-bold text-primary">СБП</span>
+              <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center border-2 border-primary/20 shadow-sm">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M13.25 2.6665H6.58333C4.46658 2.6665 2.75 4.38309 2.75 6.49984V13.1665L13.25 2.6665Z" fill="#E30613"/>
+                  <path d="M18.75 2.6665H25.4167C27.5334 2.6665 29.25 4.38309 29.25 6.49984V13.1665L18.75 2.6665Z" fill="#FF6E00"/>
+                  <path d="M2.75 18.8332V25.4998C2.75 27.6166 4.46658 29.3332 6.58333 29.3332H13.25L2.75 18.8332Z" fill="#0091D2"/>
+                  <path d="M29.25 18.8332V25.4998C29.25 27.6166 27.5334 29.3332 25.4167 29.3332H18.75L29.25 18.8332Z" fill="#73BC43"/>
+                  <path d="M16 5.3335L5.33333 16.0002L16 26.6668L26.6667 16.0002L16 5.3335Z" fill="#686B6F"/>
+                </svg>
               </div>
               <div className="flex-1 text-left">
-                <div className="font-bold text-text-primary text-lg">Система Быстрых Платежей</div>
-                <div className="text-sm text-text-secondary">Оплата по QR-коду или ссылке</div>
+                <div className="font-bold text-text-primary text-lg">СБП</div>
+                <div className="text-sm text-text-secondary">Система Быстрых Платежей</div>
               </div>
             </div>
           </div>
