@@ -68,8 +68,6 @@ function CheckoutContent() {
       const orderId = `esim_${Date.now()}`;
       const successUrl = `${window.location.origin}/success?order=${orderId}`;
       const failUrl = `${window.location.origin}/checkout?package=${pkg.id}&status=payment_failed`;
-      const tgUser = getTelegramUser();
-      const telegramId = tgUser?.id;
 
       const payment = await createPayment131SBP({
         amount: amountRub,
