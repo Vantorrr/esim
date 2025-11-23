@@ -356,14 +356,12 @@ function CheckoutContent() {
 
           <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-secondary rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none">
-                  <path d="M4 12h16M12 4v16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
+              <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center border-2 border-primary/20">
+                <span className="text-3xl font-bold text-primary">СБП</span>
               </div>
               <div className="flex-1 text-left">
-                <div className="font-medium text-text-primary">Банк 131</div>
-                <div className="text-sm text-text-secondary">Оплата по QR или ссылке через Систему быстрых платежей</div>
+                <div className="font-bold text-text-primary text-lg">Система Быстрых Платежей</div>
+                <div className="text-sm text-text-secondary">Оплата по QR-коду или ссылке</div>
               </div>
             </div>
           </div>
