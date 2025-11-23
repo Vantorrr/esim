@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getTelegramUser } from '@/lib/telegram';
-import api from '@/lib/api';
+import { api } from '@/lib/api';
 
 function PaymentPendingContent() {
   const router = useRouter();
